@@ -4,10 +4,11 @@ import UpcomingClient from './client';
 import { createClient } from '@/lib/supabase/server';
 import type { CardItem } from '@/types';
 
+type SearchParams = { [key: string]: string | string[] | undefined };
 export default async function UpcomingPage({
   searchParams,
 }: {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
   const page = Number((params?.page as string) ?? '1') || 1;
