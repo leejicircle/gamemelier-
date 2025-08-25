@@ -3,10 +3,11 @@ import { HydrationBoundary } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/server';
 import GamesClient from './client';
 
+type SearchParams = { [key: string]: string | string[] | undefined };
 export default async function GamesPage({
   searchParams,
 }: {
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams?: SearchParams;
 }) {
   const pageParam = searchParams?.page;
   const pageSizeParam = searchParams?.pageSize;
