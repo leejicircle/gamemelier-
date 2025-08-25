@@ -77,7 +77,8 @@ export default function GamesClient({
     params.set('genre', String(nextGenreId));
     router.replace(`?${params.toString()}`, { scroll: false });
   }
-
+  const selectedGenreName =
+    displayGenres.find((g) => g.id === selectedGenreId)?.name ?? '전체';
   return (
     <section className="container-fluid space-y-6">
       <GenreFilter
@@ -90,7 +91,7 @@ export default function GamesClient({
         }}
       />
       <CardsGrid
-        title="전체 게임"
+        title={`${selectedGenreName} 게임`}
         items={items}
         isLoading={isLoading}
         totalCount={totalCount}
