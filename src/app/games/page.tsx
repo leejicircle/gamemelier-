@@ -7,11 +7,13 @@ type SearchParams = { [key: string]: string | string[] | undefined };
 export default async function GamesPage({
   searchParams,
 }: {
-  searchParams?: SearchParams;
+  searchParams: Promise<SearchParams>;
 }) {
-  const pageParam = searchParams?.page;
-  const pageSizeParam = searchParams?.pageSize;
-  const genreParam = searchParams?.genre;
+  const params = await searchParams;
+
+  const pageParam = params.page;
+  const pageSizeParam = params.pageSize;
+  const genreParam = params.genre;
 
   const page = Number(Array.isArray(pageParam) ? pageParam[0] : pageParam) || 1;
   const pageSize =
