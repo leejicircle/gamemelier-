@@ -8,10 +8,16 @@ export default async function GamesPage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  const params = await searchParams;
-  const page = Number(params?.page ?? '1') || 1;
-  const pageSize = Number(params?.pageSize ?? '15') || 15;
-  const genre = Number(params?.genre ?? '-1') || -1;
+  const pageParam = searchParams?.page;
+  const pageSizeParam = searchParams?.pageSize;
+  const genreParam = searchParams?.genre;
+
+  const page = Number(Array.isArray(pageParam) ? pageParam[0] : pageParam) || 1;
+  const pageSize =
+    Number(Array.isArray(pageSizeParam) ? pageSizeParam[0] : pageSizeParam) ||
+    15;
+  const genre =
+    Number(Array.isArray(genreParam) ? genreParam[0] : genreParam) || -1;
 
   const qc = new QueryClient();
   const supabase = await createClient();
