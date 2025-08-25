@@ -6,12 +6,12 @@ import GamesClient from './client';
 export default async function GamesPage({
   searchParams,
 }: {
-  searchParams: Record<string, string | string[] | undefined>;
+  searchParams?: { [key: string]: string | string[] | undefined };
 }) {
   const params = await searchParams;
-  const page = Number(params.page ?? '1') || 1;
-  const pageSize = Number(params.pageSize ?? '15') || 15;
-  const genre = Number(params.genre ?? '-1') || -1;
+  const page = Number(params?.page ?? '1') || 1;
+  const pageSize = Number(params?.pageSize ?? '15') || 15;
+  const genre = Number(params?.genre ?? '-1') || -1;
 
   const qc = new QueryClient();
   const supabase = await createClient();
