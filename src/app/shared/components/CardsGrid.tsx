@@ -77,7 +77,7 @@ export function CardsGrid({
                 onClick={() => router.push(`/games/${game.id}`)}
               >
                 {game.image ? (
-                  <div className="relative gradient-border-wrap w-[380px] h-[205px]">
+                  <div className="relative gradient-border-wrap w-[380px] h-[205px] p-1 cursor-pointer">
                     <div className="gradient-border-content w-full h-full">
                       <Image
                         fill

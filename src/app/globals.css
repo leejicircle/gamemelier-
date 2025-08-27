@@ -41,6 +41,12 @@
   --purple2: #8b5cf6;
   --blue: #22d3ee;
 
+  --gradient: linear-gradient(
+    to bottom right,
+    var(--purple) 1%,
+    var(--purple2) 54%,
+    var(--blue) 100%
+  );
   font-family: var(--font-sans);
 }
 

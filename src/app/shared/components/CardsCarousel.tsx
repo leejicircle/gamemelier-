@@ -111,7 +111,7 @@ export function CardsCarousel({
                     >
                       {game.image ? (
                         <div className="relative w-[460px]">
-                          <div className="relative w-[460px] h-[215px] gradient-border-wrap p-1">
+                          <div className="relative w-[460px] h-[215px] gradient-border-wrap p-1 cursor-pointer">
                             <div className="gradient-border-content w-full h-full  ">
                               <Image
                                 fill
