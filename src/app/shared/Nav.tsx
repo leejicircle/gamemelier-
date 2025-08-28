@@ -38,12 +38,12 @@ export default function Nav() {
   return (
     <header className="w-full bg-gray-950 items-center h-15">
       <nav className="w-full h-12 grid grid-cols-[1fr_auto_1fr] items-center px-5 py-3">
-        <div className="flex items-center justify-start">
+        <div className="flex items-center justify-start w-[146px] h-4.5">
           <Link href="/" className="inline-flex  items-center ">
             <Image
               src={Logo}
               alt="Gamemelier"
-              className="h-4.5 w-auto"
+              className="h-4.5 w-[146px]"
               priority
             />
           </Link>
