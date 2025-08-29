@@ -5,19 +5,26 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { loginAction } from './actions';
 import SubmitButton from './components/SubmitButton';
+import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const [state, formAction] = useActionState(loginAction, { error: '' });
   const router = useRouter();
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     if (state.success) {
+      setRedirecting(true);
       router.push('/');
     }
   }, [state, router]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div
+      className="flex flex-col items-center justify-center min-h-screen bg-gray-100"
+      aria-busy={redirecting}
+    >
       <div className="p-8 bg-white rounded shadow-md w-96">
         <h1 className="text-2xl font-bold mb-6 text-center">로그인</h1>
 
@@ -75,6 +82,14 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+      {redirecting && (
+        <div className="fixed inset-0 z-[99] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <Loader2
+            className="h-36 w-36 animate-spin text-white"
+            aria-label="화면 전환 중"
+          />
+        </div>
+      )}
     </div>
   );
 }

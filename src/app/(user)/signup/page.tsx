@@ -3,7 +3,8 @@
 import { signupAction } from './actions';
 import { useActionState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useProfileStore } from '@/store/useProfileStore';
@@ -24,6 +25,8 @@ export default function SignupPage() {
   const toggleGenre = useProfileStore((s) => s.toggleGenre);
   const resetGenres = useProfileStore((s) => s.resetGenres);
 
+  const [redirecting, setRedirecting] = useState(false);
+
   useEffect(() => {
     resetGenres();
     return () => resetGenres();
@@ -33,6 +36,7 @@ export default function SignupPage() {
     if (state?.success && state?.user) {
       setUser(state.user);
       resetGenres();
+      setRedirecting(true);
       router.push('/login');
     }
   }, [state?.success, state?.user, setUser, resetGenres, router]);
@@ -40,7 +44,10 @@ export default function SignupPage() {
   const genreNames = PARENT_CATEGORIES as unknown as string[];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div
+      className="flex flex-col items-center justify-center min-h-screen bg-gray-100"
+      aria-busy={redirecting}
+    >
       <div className="p-8 bg-white rounded shadow-md w-96">
         <h1 className="text-2xl font-bold mb-6 text-center">회원가입</h1>
 
@@ -133,6 +140,14 @@ export default function SignupPage() {
           </p>
         </div>
       </div>
+      {redirecting && (
+        <div className="fixed inset-0 z-[99] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <Loader2
+            className="h-36 w-36 animate-spin text-white"
+            aria-label="화면 전환 중"
+          />
+        </div>
+      )}
     </div>
   );
 }
