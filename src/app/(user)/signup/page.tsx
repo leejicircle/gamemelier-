@@ -143,7 +143,7 @@ export default function SignupPage() {
       {redirecting && (
         <div className="fixed inset-0 z-[99] flex items-center justify-center bg-black/30 backdrop-blur-sm">
           <Loader2
-            className="h-36 w-36 animate-spin text-white"
+            className="h-20 w-20 animate-spin text-purple2"
             aria-label="화면 전환 중"
           />
         </div>
