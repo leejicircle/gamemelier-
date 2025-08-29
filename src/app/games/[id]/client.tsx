@@ -82,7 +82,7 @@ export default function GameDetailClient({ id }: { id: number }) {
                 </div>
               </div>
 
-              <div className="flex-row space-y-4">
+              <div className="flex-row space-y-4 mt-4">
                 <ConfirmBuy appId={data.id} />
                 <WishListButton gameId={data.id} initialSaved={data.is_saved} />
               </div>
