@@ -17,6 +17,7 @@ import {
   NavigationMenuList,
 } from '../../components/ui/navigation-menu';
 import Search from './Search';
+import MenuDropDown from './components/MenuDropDown';
 
 const menuItems = [
   { name: '전체 게임', href: '/games' },
@@ -37,8 +38,8 @@ export default function Nav() {
 
   return (
     <header className="w-full bg-gray-950 items-center h-15">
-      <nav className="w-full h-12 grid grid-cols-[1fr_auto_1fr] items-center px-5 py-3">
-        <div className="flex items-center justify-start w-[146px] h-4.5">
+      <nav className="w-full h-12 flex items-center px-5 py-3">
+        <div className="flex flex-1 items-center justify-start w-[146px] h-4.5">
           <Link href="/" className="inline-flex  items-center ">
             <Image
               src={Logo}
@@ -49,7 +50,7 @@ export default function Nav() {
           </Link>
         </div>
 
-        <div className="flex items-center justify-center">
+        <div className="mobile:hidden tablet:flex flex-1 items-center justify-center ">
           <NavigationMenu>
             <NavigationMenuList>
               {menuItems.map((item) => (
@@ -76,12 +77,20 @@ export default function Nav() {
           </NavigationMenu>
         </div>
 
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex flex-1 items-center justify-end gap-2">
           <Search />
-
+          <MenuDropDown
+            menuItems={menuItems}
+            isActive={isActive}
+            triggerClassName="tablet:hidden"
+          />
           {user ? (
-            <div className="inline-flex items-center gap-2">
-              <Button onClick={handleLogout} size="sm" className="h-8">
+            <div className="mobile:hidden tablet:inline-flex items-center gap-2 ">
+              <Button
+                onClick={handleLogout}
+                size="sm"
+                className="h-8 cursor-pointer"
+              >
                 로그아웃
               </Button>
             </div>
