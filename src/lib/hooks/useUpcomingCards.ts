@@ -9,8 +9,20 @@ type RpcUpcomingRow = {
   name: string;
   image: string | null;
   release_at: string | null;
+  release_date_text: string | null;
   total_count: number | null;
 };
+
+// Steam 의 release_date_text 가 비어있거나 모호 표현이면 "출시예정"으로 정규화.
+// 그 외("2026년 1분기", "2026년 3월" 등)는 원본 텍스트 그대로 노출.
+function formatUpcomingBadge(text: string | null | undefined): string {
+  const t = (text ?? '').trim();
+  if (!t) return '출시예정';
+  if (/^(coming soon|곧 출시|tba|tbd|미정|추후 공지)$/i.test(t)) {
+    return '출시예정';
+  }
+  return t;
+}
 
 export type PagedResult<T> = {
   items: T[];
@@ -38,6 +50,10 @@ export function useUpcomingCardsPage(page = 1, pageSize = 30) {
         id: r.id,
         name: r.name,
         image: r.image,
+        // 카드 하단 배지로 표시될 텍스트.
+        // Steam 의 원본 한국어 문구("2026년 1분기" 등)를 우선,
+        // 모호하거나 비어있으면 "출시예정"으로 fallback.
+        category: formatUpcomingBadge(r.release_date_text),
         release_at: r.release_at,
       })) as (CardItem & { release_at?: string | null })[];
 

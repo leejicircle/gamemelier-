@@ -43,15 +43,29 @@ export default async function MainPage() {
       });
       if (error) throw new Error(error.message);
 
-      const rows = (data ?? []) as CardItem[];
-      return rows.map(
-        (r): CardItem => ({
+      // RPC 가 release_date_text 도 반환하므로 함께 받음.
+      // 카드 배지 표시를 클라이언트 hook 과 동일한 규칙으로 정규화.
+      type Row = {
+        id: number;
+        name: string;
+        image: string | null;
+        release_at: string | null;
+        release_date_text: string | null;
+        total_count: number | null;
+      };
+      const rows = (data ?? []) as Row[];
+      return rows.map((r): CardItem => {
+        const t = (r.release_date_text ?? '').trim();
+        const isVague = /^(coming soon|곧 출시|tba|tbd|미정|추후 공지)$/i.test(
+          t,
+        );
+        return {
           id: r.id,
           name: r.name,
           image: r.image,
-          category: r.category ?? '기타',
-        }),
-      );
+          category: !t || isVague ? '출시예정' : t,
+        };
+      });
     },
     staleTime: 60_000,
   });
