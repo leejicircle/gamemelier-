@@ -12,7 +12,6 @@ import {
 } from '@/lib/api/topSellers';
 
 import { createClient } from '@/lib/supabase/server';
-import { CardItem } from '@/types';
 
 export default async function MainPage() {
   const qc = new QueryClient();
@@ -34,17 +33,17 @@ export default async function MainPage() {
     });
   }
 
-  await qc.prefetchQuery<CardItem[]>({
-    queryKey: ['upcoming-cards', limit, offset] as const,
-    queryFn: async (): Promise<CardItem[]> => {
+  // useUpcomingCardsPage(1, 10) 와 동일한 queryKey/반환 형태로 prefetch.
+  // 키가 다르면 클라이언트가 캐시 hit 못 하고 재요청 → SSR 효과 무효화.
+  await qc.prefetchQuery({
+    queryKey: ['upcoming.page.rpc', 1, 10] as const,
+    queryFn: async () => {
       const { data, error } = await supabase.rpc('list_upcoming_games_cards', {
-        p_limit: limit,
-        p_offset: offset,
+        p_limit: 10,
+        p_offset: 0,
       });
       if (error) throw new Error(error.message);
 
-      // RPC 가 release_date_text 도 반환하므로 함께 받음.
-      // 카드 배지 표시를 클라이언트 hook 과 동일한 규칙으로 정규화.
       type Row = {
         id: number;
         name: string;
@@ -54,7 +53,7 @@ export default async function MainPage() {
         total_count: number | null;
       };
       const rows = (data ?? []) as Row[];
-      return rows.map((r): CardItem => {
+      const items = rows.map((r) => {
         const t = (r.release_date_text ?? '').trim();
         const isVague = /^(coming soon|곧 출시|tba|tbd|미정|추후 공지)$/i.test(
           t,
@@ -64,8 +63,16 @@ export default async function MainPage() {
           name: r.name,
           image: r.image,
           category: !t || isVague ? '출시예정' : t,
+          release_at: r.release_at,
         };
       });
+      const totalCount = rows[0]?.total_count ?? 0;
+      return {
+        items,
+        totalCount,
+        hasPrev: false,
+        hasNext: items.length < totalCount,
+      };
     },
     staleTime: 60_000,
   });
