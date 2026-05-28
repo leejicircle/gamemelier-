@@ -96,7 +96,7 @@ export default function GamesCarousel({
       <div className={cn('flex-row justify-center', className)}>
         <div className="max-w-[800px]">
           <Card className="border-0 bg-transparent">
-            <CardContent className="relative flex aspect-video items-center justify-center p-0 overflow-hidden rounded-2xl">
+            <CardContent className="relative flex aspect-video w-full items-center justify-center p-0 overflow-hidden rounded-2xl">
               <Skeleton className="absolute inset-0 h-full w-full" />
             </CardContent>
           </Card>
@@ -130,7 +130,7 @@ export default function GamesCarousel({
           {slides.map((item, index) => (
             <CarouselItem key={index}>
               <Card className="border-0 bg-transparent">
-                <CardContent className="relative flex aspect-video items-center justify-center p-0 overflow-hidden rounded-2xl">
+                <CardContent className="relative flex aspect-video w-full items-center justify-center p-0 overflow-hidden rounded-2xl">
                   {item.kind === 'image' ? (
                     <>
                       <Image
