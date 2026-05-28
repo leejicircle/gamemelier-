@@ -63,7 +63,7 @@ export function CardsCarousel({
 
   return (
     <div className="mt-8">
-      <div className=" ml-[120px] mb-3 flex items-center justify-between px-1">
+      <div className="mb-3 flex items-center justify-between px-4 tablet:px-10 desktop:px-0 desktop:ml-[120px]">
         {title ? (
           <h1 className="text-3xl font-bold text-white">{title}</h1>
         ) : (
@@ -73,10 +73,10 @@ export function CardsCarousel({
 
       <div
         className={cn(
-          'transition-[padding] duration-200',
-          edge === 'left' && 'ml-[120px] pr-0',
-          edge === 'right' && 'pl-0 mr-[120px]',
-          edge === 'none' && 'ml-[120px] pr-0',
+          'transition-[padding] duration-200 px-4 tablet:px-10 desktop:px-0',
+          edge === 'left' && 'desktop:ml-[120px] desktop:pr-0',
+          edge === 'right' && 'desktop:pl-0 desktop:mr-[120px]',
+          edge === 'none' && 'desktop:ml-[120px] desktop:pr-0',
         )}
       >
         <Carousel opts={emblaOptions} setApi={setApi} className="w-full">
@@ -84,9 +84,9 @@ export function CardsCarousel({
             {showSkeleton
               ? Array.from({ length: skeletonCount }).map((_, i) => (
                   <CarouselItem key={i} className="basis-auto">
-                    <Card className="flex gap-2 w-[460px]">
-                      <div className="relative w-[460px]">
-                        <div className="relative w-[460px] h-[215px] gradient-border-wrap p-1">
+                    <Card className="flex gap-2 w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px]">
+                      <div className="relative w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px]">
+                        <div className="relative w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px] aspect-video gradient-border-wrap p-1">
                           <div className="gradient-border-content w-full h-full rounded-xl overflow-hidden">
                             <Skeleton className="absolute inset-0 h-full w-full" />
                           </div>
@@ -106,16 +106,16 @@ export function CardsCarousel({
               : items.map((game, i) => (
                   <CarouselItem key={game.id} className="basis-auto">
                     <Card
-                      className="flex gap-2 w-[460px]"
+                      className="flex gap-2 w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px]"
                       onClick={() => router.push(`/games/${game.id}`)}
                     >
                       {game.image ? (
-                        <div className="relative w-[460px]">
-                          <div className="relative w-[460px] h-[215px] gradient-border-wrap p-1 cursor-pointer">
+                        <div className="relative w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px]">
+                          <div className="relative w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px] aspect-video gradient-border-wrap p-1 cursor-pointer">
                             <div className="gradient-border-content w-full h-full  ">
                               <Image
                                 fill
-                                sizes="(max-width: 768px) 100vw"
+                                sizes="(max-width: 767px) calc(100vw - 32px), (max-width: 1439px) 360px, 460px"
                                 src={game.image}
                                 alt={game.name}
                                 priority={i === 0}
@@ -135,7 +135,7 @@ export function CardsCarousel({
                           </div>
                         </div>
                       ) : (
-                        <div className="w-[460px] h-[215px] bg-muted rounded-xl" />
+                        <div className="w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px] aspect-video bg-muted rounded-xl" />
                       )}
 
                       <CardContent className="bg-transparent pt-2 flex-1">
