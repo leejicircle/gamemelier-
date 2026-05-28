@@ -34,6 +34,8 @@
  * 안전장치:
  *   - service_role 키 사용 → RLS 우회. 클라/공개 환경에 절대 노출 금지.
  *   - Steam API rate limit 회피를 위해 호출 간 지연(기본 350ms) 적용.
+ *   - HTTP 403 수신 즉시 중단 (IP 차단 의심 — 수천 건을 의미 없이 시도하는 것 방지).
+ *   - HTTP 429 수신 시 Retry-After 만큼 대기 후 1회 재시도, 또 실패면 중단.
  *   - 게임별 처리 중 에러 발생 시 로그만 남기고 다음 게임으로 진행.
  *   - INGEST_LIMIT 으로 처리 수 제한 가능 (테스트용).
  *   - INGEST_SKIP_FRESH_HOURS 로 최근 갱신된 게임은 스킵 가능 (중단/재개용).
@@ -122,6 +124,28 @@ type SteamAppData = {
   pc_requirements?: { minimum?: string; recommended?: string } | unknown[];
 };
 
+/**
+ * fetchAppDetails 의 결과 타입.
+ *
+ * Steam API 호출은 단순 성공/실패가 아닌 여러 케이스가 있고, 각각 호출부의
+ * 대응이 달라야 한다 (스킵 / 재시도 / 즉시 중단). 그래서 union 으로 세분화해
+ * 호출부가 명시적으로 분기하도록 강제한다.
+ *
+ *   - ok          : 정상 응답 + data 존재. 그대로 ingestGame 으로 넘김.
+ *   - no-data     : success=false 또는 빈 응답. 게임 삭제/지역 제한 등. 스킵.
+ *   - rate-limit  : HTTP 429. retryAfterSec 만큼 대기 후 재시도 가능.
+ *   - blocked     : HTTP 403. IP 차단 의심 — 루프 즉시 중단해야 함.
+ *   - http-error  : 그 외 4xx/5xx. 일시적 장애로 간주, 스킵.
+ *   - network     : fetch 자체가 throw. 네트워크 장애, 스킵.
+ */
+type FetchResult =
+  | { kind: 'ok'; data: SteamAppData }
+  | { kind: 'no-data' }
+  | { kind: 'rate-limit'; retryAfterSec: number }
+  | { kind: 'blocked' }
+  | { kind: 'http-error'; status: number }
+  | { kind: 'network'; message: string };
+
 // -----------------------------------------------------------------------------
 // 유틸 함수
 // -----------------------------------------------------------------------------
@@ -169,34 +193,53 @@ function parseKoreanDate(s: string | null | undefined): string | null {
 
 /**
  * Steam appdetails API 호출.
- * 실패하거나 success=false 인 경우 null 반환 (게임 삭제/지역 제한 등).
+ *
+ * 단순히 null 을 반환하는 대신 FetchResult 로 실패 원인을 구분해 돌려준다.
+ * 이렇게 하면 호출부(main 루프)에서 케이스별로 다른 정책을 적용할 수 있다:
+ *   - 429 → 대기 후 재시도
+ *   - 403 → 루프 즉시 중단
+ *   - no-data / network / http-error → 다음 appid 로 진행
+ *
+ * 이 함수 자체는 로그를 남기지 않는다. 어떤 동작을 했는지(스킵/재시도/중단)는
+ * 호출부에서 결정·기록하는 편이 흐름을 따라가기 쉽기 때문.
  */
-async function fetchAppDetails(appid: number): Promise<SteamAppData | null> {
+async function fetchAppDetails(appid: number): Promise<FetchResult> {
   const url =
     `https://store.steampowered.com/api/appdetails` +
     `?appids=${appid}&l=${STEAM_LANG}&cc=${STEAM_CC}`;
 
+  // (1) fetch 자체가 throw 하는 경우 — DNS/네트워크 단절 등
   let res: Response;
   try {
     res = await fetch(url, { headers: { accept: 'application/json' } });
   } catch (e) {
-    console.warn(`[net-err] ${appid}: ${(e as Error).message}`);
-    return null;
+    return { kind: 'network', message: (e as Error).message };
   }
 
-  if (!res.ok) {
-    console.warn(`[http ${res.status}] ${appid}`);
-    return null;
+  // (2) IP 차단 — Steam 이 우리 IP 를 막은 케이스. 더 시도해봐야 의미 없음.
+  if (res.status === 403) return { kind: 'blocked' };
+
+  // (3) Rate limit — Retry-After 헤더가 있으면 그 만큼 대기하도록 정보 전달.
+  //     헤더가 없거나 파싱 실패 시 안전한 기본값 60초 사용.
+  if (res.status === 429) {
+    const ra = Number(res.headers.get('retry-after') ?? 60);
+    return { kind: 'rate-limit', retryAfterSec: Number.isFinite(ra) ? ra : 60 };
   }
 
+  // (4) 그 외 4xx/5xx — 일시적 장애로 간주, 스킵.
+  if (!res.ok) return { kind: 'http-error', status: res.status };
+
+  // (5) JSON 파싱 실패 또는 빈 응답
   const json = (await res.json().catch(() => null)) as
     | SteamAppDetailsResponse
     | null;
-  if (!json) return null;
+  if (!json) return { kind: 'no-data' };
 
+  // (6) success=false 또는 data 없음 — 게임 삭제/지역 제한/존재하지 않는 appid
   const entry = json[String(appid)];
-  if (!entry || !entry.success || !entry.data) return null;
-  return entry.data;
+  if (!entry || !entry.success || !entry.data) return { kind: 'no-data' };
+
+  return { kind: 'ok', data: entry.data };
 }
 
 /**
@@ -240,17 +283,15 @@ async function ensureLookupByName(
 
 /**
  * 단일 게임에 대한 전체 ingest 파이프라인.
- * Steam 호출 → games UPDATE → 부속 테이블 UPSERT/REPLACE 순으로 진행.
+ * games UPDATE → 부속 테이블 UPSERT/REPLACE 순으로 진행.
  *
- * 반환값: true = 갱신 성공, false = 스킵(no data) 또는 부분 실패
+ * 주의: Steam API 호출은 호출부(main 루프)가 수행하고, 성공한 data 만 인자로
+ *      넘긴다. 이 함수는 "data 받으면 DB 에 쓴다"라는 단일 책임만 가진다.
+ *      재시도/차단 감지 같은 정책은 main 루프에서 한 곳에 모아 관리한다.
+ *
+ * 반환값: true = 갱신 성공, false = 부분 실패 (현재는 항상 true 에 가깝다)
  */
-async function ingestGame(appid: number): Promise<boolean> {
-  const data = await fetchAppDetails(appid);
-  if (!data) {
-    console.warn(`[skip] ${appid}: appdetails 응답 없음`);
-    return false;
-  }
-
+async function ingestGame(appid: number, data: SteamAppData): Promise<boolean> {
   const now = new Date().toISOString();
   const releaseText = data.release_date?.date ?? null;
   const firstReleaseDate = parseKoreanDate(releaseText);
@@ -460,10 +501,16 @@ async function main() {
   console.log(`> Steam ingest 시작`);
   console.log(`  delay: ${DELAY_MS}ms / limit: ${LIMIT ?? '전체'} / skipFresh: ${SKIP_FRESH_HOURS}h`);
 
-  // 처리 대상 게임 ID 조회.
-  // SKIP_FRESH_HOURS 가 설정되어 있으면 최근 갱신된 게임은 제외.
-  let query = sb.from('games').select('id, refreshed_at').order('id');
-  const { data: rows, error } = await query;
+  // ---------------------------------------------------------------------------
+  // 처리 대상 게임 ID 조회
+  //
+  // games 테이블 전체를 가져온 뒤 JS 레벨에서 SKIP_FRESH_HOURS / LIMIT 을 적용.
+  // 쿼리에 재할당이 없으므로 const 사용.
+  // ---------------------------------------------------------------------------
+  const { data: rows, error } = await sb
+    .from('games')
+    .select('id, refreshed_at')
+    .order('id');
   if (error) {
     console.error('games 조회 실패:', error.message);
     process.exit(1);
@@ -473,7 +520,8 @@ async function main() {
     process.exit(1);
   }
 
-  // refreshed_at 기준 필터링
+  // refreshed_at 이 cutoff 보다 오래된 게임만 처리 대상에 포함.
+  // SKIP_FRESH_HOURS=0 이면 cutoff 가 null 이고 모두 통과.
   const cutoff =
     SKIP_FRESH_HOURS > 0
       ? Date.now() - SKIP_FRESH_HOURS * 3600 * 1000
@@ -485,25 +533,83 @@ async function main() {
     return new Date(r.refreshed_at as string).getTime() < cutoff;
   });
 
-  // LIMIT 적용
+  // 테스트용 LIMIT 적용
   const target = LIMIT ? filtered.slice(0, LIMIT) : filtered;
   console.log(`  대상 ${target.length}건 (전체 ${rows.length}, 신선 스킵 ${rows.length - filtered.length})\n`);
 
-  // 진행
+  // ---------------------------------------------------------------------------
+  // 순차 처리 루프
+  //
+  // 각 appid 에 대해:
+  //   1) fetchAppDetails 로 Steam API 호출
+  //   2) 결과 종류(FetchResult.kind) 에 따라 분기
+  //      - rate-limit : Retry-After 만큼 대기 후 1회 재시도. 또 429 면 abort.
+  //      - blocked    : IP 차단 — 더 시도해봐야 무의미하므로 즉시 break.
+  //      - ok         : ingestGame 호출해서 DB 반영.
+  //      - 그 외       : 로그만 남기고 다음 appid 로 진행.
+  //   3) 호출 간 DELAY_MS 대기 (rate limit 회피).
+  // ---------------------------------------------------------------------------
   let ok = 0;
   let fail = 0;
   const startedAt = Date.now();
 
   for (let i = 0; i < target.length; i++) {
     const appid = target[i].id as number;
-    try {
-      const r = await ingestGame(appid);
-      if (r) ok++;
-      else fail++;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      console.error(`[err]  ${appid}: ${msg}`);
-      fail++;
+
+    // (1) Steam API 호출
+    let result = await fetchAppDetails(appid);
+
+    // (2-a) 429 — 한 번만 재시도. Retry-After 의 2배까지 보수적으로 대기 (최대 5분).
+    if (result.kind === 'rate-limit') {
+      const wait = Math.min(result.retryAfterSec * 2 * 1000, 5 * 60 * 1000);
+      console.warn(
+        `[429] ${appid}: ${result.retryAfterSec}s 권고, 실제 ${Math.round(wait / 1000)}s 대기 후 재시도`,
+      );
+      await sleep(wait);
+      result = await fetchAppDetails(appid);
+      if (result.kind === 'rate-limit') {
+        console.error(`[abort] ${appid}: 재시도 후에도 429. 중단.`);
+        break;
+      }
+    }
+
+    // (2-b) 403 — IP 차단 의심. 루프 즉시 중단.
+    if (result.kind === 'blocked') {
+      console.error(`[abort] ${appid}: HTTP 403 — IP 차단 의심. 중단.`);
+      break;
+    }
+
+    // (2-c) 나머지 케이스 분기.
+    //       default 의 never 단언이 FetchResult 에 새 kind 가 추가되면 컴파일 에러로 잡아준다.
+    switch (result.kind) {
+      case 'network':
+        console.warn(`[net-err] ${appid}: ${result.message}`);
+        fail++;
+        break;
+      case 'http-error':
+        console.warn(`[http ${result.status}] ${appid}`);
+        fail++;
+        break;
+      case 'no-data':
+        console.warn(`[skip] ${appid}: appdetails 응답 없음`);
+        fail++;
+        break;
+      case 'ok':
+        // (2-d) 정상 — data 를 ingestGame 에 주입해 DB 반영
+        try {
+          const r = await ingestGame(appid, result.data);
+          if (r) ok++;
+          else fail++;
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          console.error(`[err]  ${appid}: ${msg}`);
+          fail++;
+        }
+        break;
+      default: {
+        const _exhaustive: never = result;
+        void _exhaustive;
+      }
     }
 
     // 25건마다 진행률 보고
@@ -514,7 +620,7 @@ async function main() {
       );
     }
 
-    // rate limit 회피
+    // (3) 다음 호출까지 대기 — rate limit 회피
     if (i < target.length - 1) await sleep(DELAY_MS);
   }
 
