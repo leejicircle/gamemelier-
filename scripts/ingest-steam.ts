@@ -144,7 +144,7 @@ type FetchResult =
   | { kind: 'rate-limit'; retryAfterSec: number }
   | { kind: 'blocked' }
   | { kind: 'http-error'; status: number }
-  | { kind: 'network' };
+  | { kind: 'network'; message: string };
 
 // -----------------------------------------------------------------------------
 // 유틸 함수
@@ -212,8 +212,8 @@ async function fetchAppDetails(appid: number): Promise<FetchResult> {
   let res: Response;
   try {
     res = await fetch(url, { headers: { accept: 'application/json' } });
-  } catch {
-    return { kind: 'network' };
+  } catch (e) {
+    return { kind: 'network', message: (e as Error).message };
   }
 
   // (2) IP 차단 — Steam 이 우리 IP 를 막은 케이스. 더 시도해봐야 의미 없음.
@@ -579,26 +579,36 @@ async function main() {
       break;
     }
 
-    // (2-c) 기타 실패 — 로그 남기고 다음 게임으로
-    if (result.kind === 'network') {
-      console.warn(`[net-err] ${appid}`);
-      fail++;
-    } else if (result.kind === 'http-error') {
-      console.warn(`[http ${result.status}] ${appid}`);
-      fail++;
-    } else if (result.kind === 'no-data') {
-      console.warn(`[skip] ${appid}: appdetails 응답 없음`);
-      fail++;
-    } else if (result.kind === 'ok') {
-      // (2-d) 정상 — data 를 ingestGame 에 주입해 DB 반영
-      try {
-        const r = await ingestGame(appid, result.data);
-        if (r) ok++;
-        else fail++;
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        console.error(`[err]  ${appid}: ${msg}`);
+    // (2-c) 나머지 케이스 분기.
+    //       default 의 never 단언이 FetchResult 에 새 kind 가 추가되면 컴파일 에러로 잡아준다.
+    switch (result.kind) {
+      case 'network':
+        console.warn(`[net-err] ${appid}: ${result.message}`);
         fail++;
+        break;
+      case 'http-error':
+        console.warn(`[http ${result.status}] ${appid}`);
+        fail++;
+        break;
+      case 'no-data':
+        console.warn(`[skip] ${appid}: appdetails 응답 없음`);
+        fail++;
+        break;
+      case 'ok':
+        // (2-d) 정상 — data 를 ingestGame 에 주입해 DB 반영
+        try {
+          const r = await ingestGame(appid, result.data);
+          if (r) ok++;
+          else fail++;
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          console.error(`[err]  ${appid}: ${msg}`);
+          fail++;
+        }
+        break;
+      default: {
+        const _exhaustive: never = result;
+        void _exhaustive;
       }
     }
 
