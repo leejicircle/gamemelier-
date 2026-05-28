@@ -83,6 +83,8 @@ export default function Nav() {
             menuItems={menuItems}
             isActive={isActive}
             triggerClassName="tablet:hidden"
+            user={user}
+            onLogout={handleLogout}
           />
           {user ? (
             <div className="mobile:hidden tablet:inline-flex items-center gap-2 ">
