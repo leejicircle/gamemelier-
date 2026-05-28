@@ -84,9 +84,9 @@ export function CardsCarousel({
             {showSkeleton
               ? Array.from({ length: skeletonCount }).map((_, i) => (
                   <CarouselItem key={i} className="basis-auto">
-                    <Card className="flex gap-2 w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px]">
-                      <div className="relative w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px]">
-                        <div className="relative w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px] aspect-video gradient-border-wrap p-1">
+                    <Card className="flex flex-col gap-2 w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px]">
+                      <div className="relative w-full">
+                        <div className="relative w-full aspect-[460/215] gradient-border-wrap p-1">
                           <div className="gradient-border-content w-full h-full rounded-xl overflow-hidden">
                             <Skeleton className="absolute inset-0 h-full w-full" />
                           </div>
@@ -106,13 +106,13 @@ export function CardsCarousel({
               : items.map((game, i) => (
                   <CarouselItem key={game.id} className="basis-auto">
                     <Card
-                      className="flex gap-2 w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px]"
+                      className="flex flex-col gap-2 w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px]"
                       onClick={() => router.push(`/games/${game.id}`)}
                     >
                       {game.image ? (
-                        <div className="relative w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px]">
-                          <div className="relative w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px] aspect-video gradient-border-wrap p-1 cursor-pointer">
-                            <div className="gradient-border-content w-full h-full  ">
+                        <div className="relative w-full">
+                          <div className="relative w-full aspect-[460/215] gradient-border-wrap p-1 cursor-pointer">
+                            <div className="gradient-border-content w-full h-full">
                               <Image
                                 fill
                                 sizes="(max-width: 767px) calc(100vw - 32px), (max-width: 1439px) 360px, 460px"
@@ -135,7 +135,7 @@ export function CardsCarousel({
                           </div>
                         </div>
                       ) : (
-                        <div className="w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px] aspect-video bg-muted rounded-xl" />
+                        <div className="w-full aspect-[460/215] bg-muted rounded-xl" />
                       )}
 
                       <CardContent className="bg-transparent pt-2 flex-1">
