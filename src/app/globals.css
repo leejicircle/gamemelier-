@@ -47,6 +47,11 @@
     var(--purple2) 54%,
     var(--blue) 100%
   );
+
+  /* layout tokens */
+  --nav-height: 60px;
+  --content-top-gap: 20px;
+
   font-family: var(--font-sans);
 }
 
@@ -103,19 +108,21 @@
   .container-fluid {
     width: 100%;
     max-width: 100%;
-    margin-top: 80px;
-    margin-bottom: 120px;
+    margin-top: calc(var(--nav-height) + var(--content-top-gap));
+    margin-bottom: 80px;
     padding-inline: 16px;
   }
 
   @media (min-width: 768px) {
     .container-fluid {
+      margin-bottom: 100px;
       padding-inline: 40px;
     }
   }
 
   @media (min-width: 1440px) {
     .container-fluid {
+      margin-bottom: 120px;
       padding-inline: min(240px, max(120px, calc((100vw - 1200px) / 2)));
     }
   }

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Menu } from 'lucide-react';
+import type { User } from '@/store/useAuthStore';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -17,12 +18,16 @@ interface MobileMenuSheetProps {
   menuItems: { name: string; href: string }[];
   isActive: (href: string) => boolean;
   triggerClassName?: string;
+  user?: User | null;
+  onLogout?: () => void | Promise<void>;
 }
 
 export default function MenuDropDown({
   menuItems,
   isActive,
   triggerClassName,
+  user,
+  onLogout,
 }: MobileMenuSheetProps) {
   return (
     <Sheet>
@@ -37,7 +42,10 @@ export default function MenuDropDown({
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="left" className="w-[50vw] max-w-mobile p-0">
+      <SheetContent
+        side="left"
+        className="w-[min(80vw,280px)] p-0"
+      >
         <SheetHeader className="border-b p-4">
           <SheetTitle className="text-left">메뉴</SheetTitle>
         </SheetHeader>
@@ -58,17 +66,35 @@ export default function MenuDropDown({
           ))}
 
           <div className="mt-3 flex flex-col gap-2">
-            <Button
-              asChild
-              variant="purple"
-              className="w-full text-white"
-              size="sm"
-            >
-              <Link href="/login">로그인</Link>
-            </Button>
-            <Button asChild className="w-full" size="sm">
-              <Link href="/signup">회원가입</Link>
-            </Button>
+            {user ? (
+              <SheetClose asChild>
+                <Button
+                  onClick={onLogout}
+                  className="w-full"
+                  size="sm"
+                >
+                  로그아웃
+                </Button>
+              </SheetClose>
+            ) : (
+              <>
+                <SheetClose asChild>
+                  <Button
+                    asChild
+                    variant="purple"
+                    className="w-full text-white"
+                    size="sm"
+                  >
+                    <Link href="/login">로그인</Link>
+                  </Button>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Button asChild className="w-full" size="sm">
+                    <Link href="/signup">회원가입</Link>
+                  </Button>
+                </SheetClose>
+              </>
+            )}
           </div>
         </nav>
       </SheetContent>

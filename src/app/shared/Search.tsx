@@ -52,7 +52,7 @@ export default function Search() {
         side="bottom"
         align="end"
         sideOffset={-36}
-        className="p-0 w-90 z-50"
+        className="p-0 w-[min(360px,calc(100vw-32px))] z-50"
       >
         <Command shouldFilter={false} className="z-50">
           <CommandInput
