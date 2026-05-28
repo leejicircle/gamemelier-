@@ -31,7 +31,6 @@ export function CardsGrid({
   const showSkeleton = isLoading ?? items.length === 0;
   const skeletonCount = showSkeleton ? 8 : items.length;
   const router = useRouter();
-  console.log('items', items.length);
 
   return (
     <section>
@@ -53,11 +52,11 @@ export function CardsGrid({
         </div>
       )}
 
-      <div className="w-full grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-20">
+      <div className="w-full grid grid-cols-1 tablet:grid-cols-2 desktop:grid-cols-3 gap-x-5 gap-y-10 tablet:gap-y-20">
         {showSkeleton
           ? Array.from({ length: skeletonCount }).map((_, idx) => (
-              <Card key={idx} className="flex gap-2">
-                <div className="relative gradient-border-wrap w-[380px] h-[205px]">
+              <Card key={idx} className="flex flex-col gap-2">
+                <div className="relative gradient-border-wrap w-full aspect-[460/215]">
                   <div className="gradient-border-content w-full h-full rounded-xl overflow-hidden">
                     <Skeleton className="absolute inset-0 h-full w-full" />
                   </div>
@@ -73,15 +72,15 @@ export function CardsGrid({
           : items.map((game, i) => (
               <Card
                 key={game.id}
-                className="flex gap-2"
+                className="flex flex-col gap-2"
                 onClick={() => router.push(`/games/${game.id}`)}
               >
                 {game.image ? (
-                  <div className="relative gradient-border-wrap w-[380px] h-[205px] p-1 cursor-pointer">
+                  <div className="relative gradient-border-wrap w-full aspect-[460/215] p-1 cursor-pointer">
                     <div className="gradient-border-content w-full h-full">
                       <Image
                         fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1440px) 50vw, 33vw"
+                        sizes="(max-width: 767px) 100vw, (max-width: 1439px) 50vw, 33vw"
                         src={game.image}
                         alt={game.name}
                         priority={i === 0}
@@ -97,7 +96,7 @@ export function CardsGrid({
                     </div>
                   </div>
                 ) : (
-                  <div className="w-full h-[215px] bg-muted" />
+                  <div className="w-full aspect-[460/215] bg-muted rounded-xl" />
                 )}
 
                 <CardContent className="bg-transparent">

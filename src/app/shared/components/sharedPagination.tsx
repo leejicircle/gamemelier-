@@ -111,7 +111,7 @@ export default function AppPagination({
           </PaginationItem>
         </PaginationContent>
       </Pagination>
-      <span>Total items: {totalCount}</span>
+      <span className="text-gray-500">총 {totalCount}개</span>
     </div>
   );
 }
