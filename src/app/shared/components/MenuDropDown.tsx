@@ -50,13 +50,13 @@ export default function MenuDropDown({
           <SheetTitle className="text-left">메뉴</SheetTitle>
         </SheetHeader>
 
-        <nav className="flex flex-col p-2">
+        <nav className="flex flex-col p-2 overflow-hidden">
           {menuItems.map(({ name, href }) => (
             <SheetClose className="text-white" asChild key={href}>
               <Link
                 href={href}
                 className={cn(
-                  'rounded-md px-3 py-2 text-sm hover:bg-purple2',
+                  'rounded-md px-3 py-2 text-sm hover:bg-purple2 whitespace-nowrap',
                   isActive(href) ? 'text-white font-bold' : 'text-white/80',
                 )}
               >
