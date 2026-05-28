@@ -56,7 +56,7 @@ export default function MenuDropDown({
               <Link
                 href={href}
                 className={cn(
-                  'rounded-md px-3 py-2 text-sm hover:bg-purple2',
+                  'rounded-md px-3 py-2 text-sm hover:bg-purple2 whitespace-nowrap',
                   isActive(href) ? 'text-white font-bold' : 'text-white/80',
                 )}
               >
