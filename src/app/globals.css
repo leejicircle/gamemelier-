@@ -49,6 +49,7 @@
   );
 
   /* layout tokens */
+  /* --nav-height: Nav.tsx의 <header> h-15(60px)와 일치해야 함 */
   --nav-height: 60px;
   --content-top-gap: 20px;
 

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 export function Footer() {
   return (
-    <footer className="w-full bg-gray-900 px-4 py-10 tablet:px-10 tablet:py-[40px]">
+    <footer className="w-full bg-gray-900 px-4 py-10 tablet:px-10">
       <div className="min-w-[281px]">
         <div className="mb-[40px]">
           <Image src={Gamemelier} width={145} height={18} alt="logo" />
