@@ -22,10 +22,10 @@ export default function LoginPage() {
 
   return (
     <div
-      className="flex flex-col items-center min-h-screen bg-gray-950 px-4 py-10 tablet:justify-center"
+      className="flex flex-col items-center min-h-screen bg-gray-950 px-4 py-10"
       aria-busy={redirecting}
     >
-      <div className="p-6 tablet:p-8 bg-gray-900 rounded-lg shadow-md w-full max-w-sm">
+      <div className="p-6 tablet:p-8 bg-gray-900 rounded-lg shadow-md w-full max-w-sm tablet:my-auto">
         <h1 className="text-2xl font-bold mb-6 text-center text-white">
           로그인
         </h1>
@@ -77,7 +77,7 @@ export default function LoginPage() {
             계정이 없으신가요?{' '}
             <Link
               href="/signup"
-              className="text-purple2 hover:text-purple font-medium"
+              className="text-purple2 hover:text-purple2/80 font-medium"
             >
               회원가입
             </Link>
