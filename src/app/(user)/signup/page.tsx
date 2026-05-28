@@ -45,17 +45,19 @@ export default function SignupPage() {
 
   return (
     <div
-      className="flex flex-col items-center justify-center min-h-screen bg-gray-100"
+      className="flex flex-col items-center min-h-screen bg-gray-950 px-4 py-10"
       aria-busy={redirecting}
     >
-      <div className="p-8 bg-white rounded shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-6 text-center">회원가입</h1>
+      <div className="p-6 tablet:p-8 bg-gray-900 rounded-lg shadow-md w-full max-w-sm tablet:my-auto">
+        <h1 className="text-2xl font-bold mb-6 text-center text-white">
+          회원가입
+        </h1>
 
         <form action={formAction} className="space-y-4">
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-200"
             >
               이메일
             </label>
@@ -64,7 +66,7 @@ export default function SignupPage() {
               name="email"
               type="email"
               required
-              className="text-gray-900 mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+              className="mt-1 block w-full px-3 py-2 bg-gray-950 text-white border border-gray-700 rounded-md shadow-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple2 focus:border-purple2"
               placeholder="이메일을 입력하세요"
             />
           </div>
@@ -72,7 +74,7 @@ export default function SignupPage() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-200"
             >
               비밀번호
             </label>
@@ -82,7 +84,7 @@ export default function SignupPage() {
               type="password"
               required
               minLength={6}
-              className="text-gray-900 mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+              className="mt-1 block w-full px-3 py-2 bg-gray-950 text-white border border-gray-700 rounded-md shadow-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple2 focus:border-purple2"
               placeholder="비밀번호를 입력하세요 (최소 6자)"
             />
           </div>
@@ -90,7 +92,7 @@ export default function SignupPage() {
           <div>
             <label
               htmlFor="nickname"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-200"
             >
               닉네임
             </label>
@@ -99,7 +101,7 @@ export default function SignupPage() {
               name="nickname"
               type="text"
               maxLength={30}
-              className="text-gray-900 mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+              className="mt-1 block w-full px-3 py-2 bg-gray-950 text-white border border-gray-700 rounded-md shadow-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple2 focus:border-purple2"
               placeholder="닉네임 (최대 30자)"
             />
           </div>
@@ -120,7 +122,7 @@ export default function SignupPage() {
           />
 
           {state?.error && (
-            <p className="text-red-500 text-sm mb-2 text-center">
+            <p className="text-red-400 text-sm mb-2 text-center">
               {state.error}
             </p>
           )}
@@ -129,11 +131,11 @@ export default function SignupPage() {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-400">
             이미 계정이 있으신가요?{' '}
             <Link
               href="/login"
-              className="text-indigo-600 hover:text-indigo-800 font-medium"
+              className="text-purple2 hover:text-purple2/80 font-medium"
             >
               로그인
             </Link>
