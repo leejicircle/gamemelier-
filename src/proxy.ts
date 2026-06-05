@@ -3,7 +3,7 @@ import { updateSession } from '@/lib/supabase/middleware';
 import { NextResponse } from 'next/server';
 
 export async function proxy(request: NextRequest) {
-  const user = await updateSession(request);
+  const { user, response } = await updateSession(request);
 
   if (
     !user &&
@@ -16,6 +16,9 @@ export async function proxy(request: NextRequest) {
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
+
+  // Supabase 세션 갱신 쿠키를 응답에 포함
+  return response;
 }
 
 export const config = {
