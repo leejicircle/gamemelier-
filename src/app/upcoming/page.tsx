@@ -38,19 +38,28 @@ export default async function UpcomingPage({
           name: string;
           image: string | null;
           release_at: string | null;
+          release_date_text: string | null;
           total_count: number | null;
         };
 
         const rows = (data ?? []) as Row[];
 
+        // Steam release_date_text 가 있으면 그대로 노출, 없으면 "출시예정".
+        // 클라이언트(useUpcomingCards.ts) 의 formatUpcomingBadge 와 동일 정책.
         const items: (CardItem & { release_at?: string | null })[] = rows.map(
-          (r) => ({
-            id: r.id,
-            name: r.name,
-            image: r.image,
-            category: '출시예정',
-            release_at: r.release_at,
-          }),
+          (r) => {
+            const t = (r.release_date_text ?? '').trim();
+            const isVague = /^(coming soon|곧 출시|tba|tbd|미정|추후 공지)$/i.test(
+              t,
+            );
+            return {
+              id: r.id,
+              name: r.name,
+              image: r.image,
+              category: !t || isVague ? '출시예정' : t,
+              release_at: r.release_at,
+            };
+          },
         );
 
         const totalCount = rows[0]?.total_count ?? 0;

@@ -50,7 +50,7 @@ export default function Nav() {
           </Link>
         </div>
 
-        <div className="mobile:hidden tablet:flex flex-1 items-center justify-center ">
+        <div className="hidden tablet:flex flex-1 items-center justify-center ">
           <NavigationMenu>
             <NavigationMenuList>
               {menuItems.map((item) => (
@@ -62,7 +62,7 @@ export default function Nav() {
                     <Link
                       href={item.href}
                       className={cn(
-                        'px-2 text-sm font-medium transition-colors',
+                        'px-2 text-sm font-medium transition-colors whitespace-nowrap',
                         isActive(item.href) ? 'text-white' : 'text-white/80',
                         'hover:text-white',
                       )}
@@ -83,9 +83,11 @@ export default function Nav() {
             menuItems={menuItems}
             isActive={isActive}
             triggerClassName="tablet:hidden"
+            user={user}
+            onLogout={handleLogout}
           />
           {user ? (
-            <div className="mobile:hidden tablet:inline-flex items-center gap-2 ">
+            <div className="hidden tablet:inline-flex items-center gap-2 ">
               <Button
                 onClick={handleLogout}
                 size="sm"

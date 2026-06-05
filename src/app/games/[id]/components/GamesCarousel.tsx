@@ -93,10 +93,10 @@ export default function GamesCarousel({
   if (slides.length === 0) {
     const skeletonThumbCount = 5;
     return (
-      <div className={cn('flex-row justify-center', className)}>
+      <div className={cn('flex flex-col justify-center', className)}>
         <div className="max-w-[800px]">
           <Card className="border-0 bg-transparent">
-            <CardContent className="relative flex aspect-video items-center justify-center p-0 overflow-hidden rounded-2xl">
+            <CardContent className="relative flex aspect-video w-full items-center justify-center p-0 overflow-hidden rounded-2xl">
               <Skeleton className="absolute inset-0 h-full w-full" />
             </CardContent>
           </Card>
@@ -120,7 +120,7 @@ export default function GamesCarousel({
   const thumbItems = slides.slice(0, 5);
 
   return (
-    <div className={cn('flex-row justify-center', className)}>
+    <div className={cn('flex flex-col justify-center', className)}>
       <Carousel
         setApi={setApi}
         className="max-w-[800px] group"
@@ -130,7 +130,7 @@ export default function GamesCarousel({
           {slides.map((item, index) => (
             <CarouselItem key={index}>
               <Card className="border-0 bg-transparent">
-                <CardContent className="relative flex aspect-video items-center justify-center p-0 overflow-hidden rounded-2xl">
+                <CardContent className="relative flex aspect-video w-full items-center justify-center p-0 overflow-hidden rounded-2xl">
                   {item.kind === 'image' ? (
                     <>
                       <Image

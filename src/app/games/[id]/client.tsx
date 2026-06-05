@@ -26,13 +26,13 @@ export default function GameDetailClient({ id }: { id: number }) {
         <div>
           <h1 className="text-3xl font-bold text-white">{data.name}</h1>
         </div>
-        <div className="flex mt-10 justify-center">
-          <div className="flex-2 space-y-16">
+        <div className="flex mt-10 justify-center gap-10">
+          <div className="flex-1 space-y-16 max-w-[800px]">
             <GamesCarousel
               videos={data.videos}
               screenshots={data.screenshots}
             />
-            <div className="flex-row space-y-16 w-[800px] justify-center">
+            <div className="flex flex-col space-y-16 w-full justify-center">
               {data.summary && (
                 <div>
                   <p className="text-white text-md whitespace-pre-line font-medium">
@@ -45,7 +45,7 @@ export default function GameDetailClient({ id }: { id: number }) {
               </div>
             </div>
           </div>
-          <div className="flex-row">
+          <div className="flex flex-col gap-5">
             <div>
               <Image
                 className="rounded-lg w-[328px] h-[100px]"
@@ -65,7 +65,7 @@ export default function GameDetailClient({ id }: { id: number }) {
                 ))}
               </div>
 
-              <div className="mt-12.5">
+              <div className="mt-[3.125rem]">
                 {data.discount_percent && data.discount_percent > 0 && (
                   <div className="text-xl font-medium text-gray-600">
                     <span className="mr-2 text-white">
@@ -82,7 +82,7 @@ export default function GameDetailClient({ id }: { id: number }) {
                 </div>
               </div>
 
-              <div className="flex-row space-y-4 mt-4">
+              <div className="flex flex-col gap-4 mt-4">
                 <ConfirmBuy appId={data.id} />
                 <WishListButton gameId={data.id} initialSaved={data.is_saved} />
               </div>

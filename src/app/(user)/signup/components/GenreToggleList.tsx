@@ -21,7 +21,7 @@ export default function GenreToggleList({
 }: GenreToggleListProps) {
   return (
     <div className={cn('space-y-2', className)}>
-      <p className="font-semibold">선호 장르 선택</p>
+      <p className="font-semibold text-gray-200">선호 장르 선택</p>
 
       <div className="flex flex-wrap gap-2">
         {genres.map((genre) => {
@@ -33,9 +33,9 @@ export default function GenreToggleList({
               onPressedChange={() => toggleGenre(genre)}
               disabled={disabled || loading}
               className={cn(
-                'rounded-full border px-3 py-1.5 text-sm',
-                'data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-transparent',
-                'hover:bg-muted',
+                'rounded-full border border-gray-700 px-3 py-1.5 text-sm text-gray-200 bg-transparent',
+                'data-[state=on]:bg-purple2 data-[state=on]:text-white data-[state=on]:border-transparent',
+                'hover:bg-gray-800 hover:text-white',
               )}
             >
               {genre}
