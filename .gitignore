@@ -13,6 +13,12 @@
 # testing
 /coverage
 
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
 # next.js
 /.next/
 /out/
@@ -33,8 +39,10 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
-#claude 
-.claude
+#claude
+# 에이전트 정의는 CI(자동 리뷰)에서 읽어야 하므로 추적. 로컬 설정만 무시.
+.claude/*
+!.claude/agents/
 # vercel
 .vercel
 
