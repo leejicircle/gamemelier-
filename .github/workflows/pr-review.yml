@@ -1,0 +1,62 @@
+# =============================================================================
+# .github/workflows/pr-review.yml
+# -----------------------------------------------------------------------------
+# 역할: PR이 열리거나 새 커밋이 푸시될 때마다 Claude Code가 자동으로 코드 리뷰를
+#       수행하고, 결과를 한국어로 PR 코멘트에 남긴다.
+#       리뷰 기준·체크리스트·보고 형식은 저장소의
+#       `.claude/agents/code-reviewer.md` (code-reviewer 에이전트)를 그대로 따른다.
+#
+# ⚠️ 활성화 조건 (둘 다 충족해야 동작):
+#   1) pull_request 워크플로는 PR의 "대상(base) 브랜치"에 있는 버전이 실행된다.
+#      → 이 파일이 main에 머지돼야 main으로 가는 PR이 리뷰됨.
+#        (이 파일을 올리는 PR "자신"은 아직 리뷰 안 됨 — 머지 이후의 PR부터 동작)
+#   2) 저장소 Secret 등록 필요 (Settings → Secrets and variables → Actions):
+#        ANTHROPIC_API_KEY   console.anthropic.com 에서 발급한 API 키
+#
+# 비용: 자동 리뷰는 매 PR/커밋마다 Claude API 토큰을 소모한다(유료).
+#       claude_args 의 --max-turns 와 timeout-minutes 로 폭주를 막는다.
+#
+# 보안: 이 저장소는 PR이 본인 브랜치(dev→main)에서 오므로 fork PR 시크릿 노출
+#       위험이 없다. 외부 fork PR을 받기 시작하면 인증 방식을 재검토할 것.
+# =============================================================================
+
+name: PR 자동 리뷰
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+# 같은 PR에 새 커밋이 연속으로 오면 이전 리뷰 실행은 취소하고 최신 것만 남긴다.
+concurrency:
+  group: pr-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read # PR diff 읽기
+  pull-requests: write # 리뷰 코멘트 작성
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # diff 비교를 위해 전체 히스토리 확보
+
+      - name: Claude 코드 리뷰
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: '--max-turns 15'
+          prompt: |
+            이 풀 리퀘스트의 변경분을 코드 리뷰해줘.
+
+            - 리뷰 기준·체크리스트·보고 형식은 저장소의
+              `.claude/agents/code-reviewer.md` (code-reviewer 에이전트) 규칙을
+              그대로 따른다. 가능하면 code-reviewer 서브에이전트에게 위임해라.
+            - 리뷰 범위는 "이 PR의 diff"로 한정한다. CI 환경이라 되물을 사용자가
+              없으니, 스코프를 질문하지 말고 바로 진행해라.
+            - 결과는 반드시 한국어로 작성하고, PR 코멘트로 남긴다.
+            - 코드를 수정하지 마라. 발견과 제안만 한다.
