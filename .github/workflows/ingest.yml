@@ -1,0 +1,71 @@
+# =============================================================================
+# .github/workflows/ingest.yml
+# -----------------------------------------------------------------------------
+# 역할: Steam 데이터를 주기적으로 Supabase에 자동 적재 (무인 배치).
+#   1단계  ingest-upcoming.ts → 출시예정 신작 발견 후 신규 게임 추가
+#   2단계  ingest-steam.ts    → 기존 게임 상세/가격 전체 갱신
+#
+# 실행 시점:
+#   - schedule(cron)   : 매일 03:30 KST 자동 실행
+#   - workflow_dispatch: Actions 탭의 "Run workflow" 수동 버튼 (첫 테스트/긴급 갱신용)
+#
+# ⚠️ 활성화 조건 (둘 다 충족해야 실제로 돈다):
+#   1) cron(schedule)은 "기본 브랜치(main)"에 있는 워크플로만 동작함.
+#      → dev에 둔 동안은 수동 실행만 가능. main에 머지돼야 매일 자동 실행됨.
+#   2) 저장소에 아래 두 Secret 등록 필요
+#      (Settings → Secrets and variables → Actions → New repository secret):
+#        INGEST_SUPABASE_URL       Supabase 프로젝트 URL
+#        INGEST_SERVICE_ROLE_KEY   service_role 키 (절대 코드/로그에 노출 금지)
+# =============================================================================
+
+name: Steam 데이터 적재
+
+on:
+  schedule:
+    # GitHub cron은 UTC 기준. '30 18 * * *' = 매일 18:30 UTC = 03:30 KST.
+    # (정각 :00은 GitHub 부하가 몰려 지연되기 쉬워 :30으로 둠)
+    - cron: '30 18 * * *'
+  workflow_dispatch: {}
+
+# 이전 실행이 안 끝났으면 새 실행을 대기시켜 동시 실행 방지.
+# (같은 IP에서 두 번 돌면 rate limit에 더 빨리 걸림)
+concurrency:
+  group: steam-ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    # 654개 기준 실제 ~40분. 멈춘 잡이 6시간 한도까지 도는 걸 막는 안전 상한.
+    timeout-minutes: 120
+    env:
+      # 저장소 Secret → 스크립트가 읽는 환경변수로 매핑
+      INGEST_SUPABASE_URL: ${{ secrets.INGEST_SUPABASE_URL }}
+      INGEST_SERVICE_ROLE_KEY: ${{ secrets.INGEST_SERVICE_ROLE_KEY }}
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Node 설치
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci
+
+      # 1단계: 출시예정 신작 발견 → 신규 게임 INSERT/UPSERT (~80개, 수 분)
+      - name: 출시예정 게임 수집
+        run: npx tsx scripts/ingest-upcoming.ts
+        env:
+          INGEST_DELAY_MS: '2000' # 공유 IP라 보수적으로 (분당 ~30회)
+          INGEST_UPCOMING_COUNT: '80'
+
+      # 2단계: 기존 게임 전체 갱신.
+      #        1단계에서 방금 갱신한 게임은 skip-fresh로 자동 제외돼 중복 호출 안 함.
+      - name: 게임 상세/가격 갱신
+        run: npx tsx scripts/ingest-steam.ts
+        env:
+          INGEST_DELAY_MS: '2000' # 654 × ~2s + 오버헤드 ≈ 30~40분
+          INGEST_SKIP_FRESH_HOURS: '20' # 최근 20h 내 갱신분 건너뜀(재실행/중복 방지)
