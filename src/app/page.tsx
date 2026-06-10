@@ -6,10 +6,8 @@ import {
   HydrationBoundary,
   QueryClient,
 } from '@tanstack/react-query';
-import {
-  fetchCardsByOrderedIdsServer,
-  fetchTopSellerIds,
-} from '@/lib/api/topSellers';
+import { fetchCardsByOrderedIdsServer } from '@/lib/api/topSellers';
+import { getTopSellerIds } from '@/lib/steam/topsellers';
 
 import { createClient } from '@/lib/supabase/server';
 
@@ -21,7 +19,7 @@ export default async function MainPage() {
 
   const idsResp = await qc.fetchQuery({
     queryKey: ['top-seller-ids', limit, offset],
-    queryFn: () => fetchTopSellerIds(limit, offset),
+    queryFn: () => getTopSellerIds(limit, offset),
     staleTime: 60_000,
   });
 

@@ -33,9 +33,6 @@ jobs:
       # 빌드/기동 시 클라이언트 번들에 주입되는 공개값
       NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-      # SSR에서 자기 API 라우트를 호출할 때 쓰는 절대 base URL.
-      # 없으면 fetchTopSellerIds 가 상대경로로 호출해 서버 fetch가 깨진다.
-      NEXT_BASE_URL: http://localhost:3000
     steps:
       - name: 코드 체크아웃
         uses: actions/checkout@v4
