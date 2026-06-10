@@ -1,0 +1,72 @@
+# =============================================================================
+# .github/workflows/security.yml
+# -----------------------------------------------------------------------------
+# 역할: 보안 게이트. PR / main push / 주간 스케줄마다 세 검사를 병렬 수행한다.
+#   - codeql : 정적 분석(SAST) — 코드의 취약 패턴 탐지. 결과는 Security 탭에 표시.
+#   - audit  : 의존성 알려진 취약점 (npm audit)
+#   - secrets: 커밋/히스토리의 시크릿 노출 탐지 (gitleaks)
+#
+# 추가 시크릿/변수 불필요: public 저장소라 CodeQL·gitleaks 무료이며
+# 기본 제공되는 GITHUB_TOKEN 으로 동작한다.
+# =============================================================================
+
+name: 보안 검사
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 19 * * 0' # 매주 일요일 04:00 KST — 새로 공개된 취약점 주기 점검
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # 정적 분석(SAST). 결과는 GitHub Security 탭의 Code scanning 알림으로 쌓인다.
+  codeql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: CodeQL 초기화
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+      - name: CodeQL 분석
+        uses: github/codeql-action/analyze@v3
+
+  # 의존성 알려진 취약점. moderate 는 보고만 하고 high 이상이면 실패시킨다.
+  # (현재 moderate 2건은 블로킹하지 않음 — 필요 시 --audit-level=moderate 로 강화)
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: 의존성 취약점 검사
+        run: npm audit --audit-level=high
+
+  # 커밋/히스토리 시크릿 노출 탐지.
+  secrets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 전체 히스토리 스캔
+      - name: gitleaks 시크릿 스캔
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
