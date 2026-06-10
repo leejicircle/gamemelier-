@@ -96,8 +96,7 @@ npm install
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 
-# 앱 기본 URL / Supabase Function
-NEXT_BASE_URL=http://localhost:3000
+# Supabase Function
 NEXT_PUBLIC_FUNCTION_URL=your-supabase-function-url
 ```
 
