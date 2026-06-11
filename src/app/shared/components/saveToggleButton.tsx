@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Heart, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { toggleSaved, fetchIsSaved } from '@/lib/api/savedGamesApi';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -49,8 +50,11 @@ export default function SaveToggleButton({
       const { saved } = await toggleSaved(gameId);
       setIsSaved(saved);
       onChange?.(saved);
-    } catch {
+    } catch (e) {
       setIsSaved(isSaved ?? false);
+      toast.error(
+        e instanceof Error ? e.message : '저장 처리 중 오류가 발생했습니다.',
+      );
     } finally {
       setLoading(false);
     }
