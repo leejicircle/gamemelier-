@@ -10,60 +10,105 @@ export type SavedGameItem = {
   cover_url: string | null;
 };
 
-const FUNCTION_URL = process.env.NEXT_PUBLIC_FUNCTION_URL!;
-if (!FUNCTION_URL) {
-  console.warn('NEXT_PUBLIC_FUNCTION_URL 설정 필요');
+/**
+ * 저장 기능은 Supabase 를 클라이언트에서 직접 호출한다.
+ * 본인 행만 보고/조작하도록 user_saved_games 의 RLS(auth.uid() = user_id)가 보장한다.
+ * (과거에는 Edge Function 을 경유했으나, 단순 CRUD 라 직접 호출로 단순화)
+ */
+
+/** 현재 로그인 유저 id. 비로그인이면 throw. (로컬 세션 기반, 네트워크 호출 없음) */
+async function requireUserId(): Promise<string> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) throw new Error('로그인이 필요합니다.');
+  return session.user.id;
 }
 
+/** 저장 토글: 이미 저장돼 있으면 해제, 아니면 저장. */
 export async function toggleSaved(gameId: number) {
-  const { data: session } = await supabase.auth.getSession();
-  const token = session.session?.access_token;
-  if (!token) throw new Error('로그인이 필요합니다.');
+  const userId = await requireUserId();
 
-  const res = await fetch(`${FUNCTION_URL}/saved-games/toggle`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ game_id: gameId, source: 'like_button' }),
-  });
+  const { data: existing, error: selErr } = await supabase
+    .from('user_saved_games')
+    .select('game_id')
+    .eq('user_id', userId)
+    .eq('game_id', gameId)
+    .maybeSingle();
+  if (selErr) throw selErr;
 
-  if (!res.ok) throw new Error(await res.text());
-  return (await res.json()) as { saved: boolean };
+  if (existing) {
+    const { error } = await supabase
+      .from('user_saved_games')
+      .delete()
+      .eq('user_id', userId)
+      .eq('game_id', gameId);
+    if (error) throw error;
+    return { saved: false };
+  }
+
+  // upsert + ignoreDuplicates 로 멱등 보장: 빠른 연속 클릭으로 INSERT 가 겹쳐도
+  // unique violation 없이 조용히 통과한다 (race condition 방어).
+  const { error } = await supabase
+    .from('user_saved_games')
+    .upsert(
+      { user_id: userId, game_id: gameId },
+      { onConflict: 'user_id,game_id', ignoreDuplicates: true },
+    );
+  if (error) throw error;
+  return { saved: true };
 }
 
+/** 특정 게임의 저장 여부. */
 export async function fetchIsSaved(gameId: number) {
-  const { data: session } = await supabase.auth.getSession();
-  const token = session.session?.access_token;
-  if (!token) throw new Error('로그인이 필요합니다.');
+  const userId = await requireUserId();
 
-  const res = await fetch(
-    `${FUNCTION_URL}/saved-games/is-saved?game_id=${gameId}`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    },
+  const { data, error } = await supabase
+    .from('user_saved_games')
+    .select('game_id')
+    .eq('user_id', userId)
+    .eq('game_id', gameId)
+    .maybeSingle();
+  if (error) throw error;
+  return { is_saved: !!data };
+}
+
+/** 저장한 게임 목록 (games 조인, 최신 저장순). */
+export async function fetchSavedList() {
+  const userId = await requireUserId();
+
+  const { data, error } = await supabase
+    .from('user_saved_games')
+    .select(
+      'saved_at, games(id, name, metacritic_score, reviews_total, first_release_date, header_image)',
+    )
+    .eq('user_id', userId)
+    .order('saved_at', { ascending: false });
+  if (error) throw error;
+
+  type Row = {
+    saved_at: string;
+    games: {
+      id: number;
+      name: string;
+      metacritic_score: number | null;
+      reviews_total: number | null;
+      first_release_date: string | null;
+      header_image: string | null;
+    } | null;
+  };
+
+  const items: SavedGameItem[] = ((data ?? []) as unknown as Row[]).map(
+    (row) => ({
+      saved_at: row.saved_at,
+      id: row.games?.id ?? 0,
+      name: row.games?.name ?? '',
+      metacritic_score: row.games?.metacritic_score ?? null,
+      reviews_total: row.games?.reviews_total ?? null,
+      first_release_date: row.games?.first_release_date ?? null,
+      cover_url: row.games?.header_image ?? null,
+    }),
   );
 
-  if (!res.ok) throw new Error(await res.text());
-  return (await res.json()) as { is_saved: boolean };
-}
-
-export async function fetchSavedList() {
-  const { data: session } = await supabase.auth.getSession();
-  const token = session.session?.access_token;
-  if (!token) throw new Error('로그인이 필요합니다.');
-
-  const url = new URL(`${FUNCTION_URL}/saved-games/list`);
-
-  const res = await fetch(url.toString(), {
-    method: 'GET',
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  if (!res.ok) throw new Error(await res.text());
-  return (await res.json()) as {
-    items: SavedGameItem[];
-    count: number;
-  };
+  return { items, count: items.length };
 }
