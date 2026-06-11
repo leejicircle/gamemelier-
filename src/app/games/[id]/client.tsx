@@ -48,7 +48,7 @@ export default function GameDetailClient({ id }: { id: number }) {
           <div className="flex flex-col gap-5 w-full desktop:w-[328px] shrink-0">
             <div>
               <Image
-                className="rounded-lg w-full h-auto desktop:w-[328px] desktop:h-[100px]"
+                className="rounded-lg w-full h-[120px] object-cover desktop:w-[328px] desktop:h-[100px]"
                 src={data.header_image!}
                 alt={data.name}
                 width={328}

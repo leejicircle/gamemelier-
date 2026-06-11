@@ -102,7 +102,7 @@ export default function GamesCarousel({
           </Card>
         </div>
 
-        <div className="flex w-full max-w-[800px] justify-center gap-4 mt-4 overflow-x-auto py-2">
+        <div className="flex w-full max-w-[800px] justify-start gap-4 mt-4 overflow-x-auto py-2">
           {Array.from({ length: skeletonThumbCount }).map((_, index) => (
             <div
               key={index}
@@ -194,7 +194,7 @@ export default function GamesCarousel({
                 {thumbSrc ? (
                   <Image
                     fill
-                    sizes="136px"
+                    sizes="(max-width: 1439px) 100px, 136px"
                     src={thumbSrc}
                     alt={`thumb-${index}`}
                   />
