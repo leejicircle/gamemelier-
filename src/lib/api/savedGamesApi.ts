@@ -47,9 +47,14 @@ export async function toggleSaved(gameId: number) {
     return { saved: false };
   }
 
+  // upsert + ignoreDuplicates 로 멱등 보장: 빠른 연속 클릭으로 INSERT 가 겹쳐도
+  // unique violation 없이 조용히 통과한다 (race condition 방어).
   const { error } = await supabase
     .from('user_saved_games')
-    .insert({ user_id: userId, game_id: gameId });
+    .upsert(
+      { user_id: userId, game_id: gameId },
+      { onConflict: 'user_id,game_id', ignoreDuplicates: true },
+    );
   if (error) throw error;
   return { saved: true };
 }

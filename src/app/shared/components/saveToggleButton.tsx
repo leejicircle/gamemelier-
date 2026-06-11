@@ -29,7 +29,10 @@ export default function SaveToggleButton({
     if (isSaved == null) {
       fetchIsSaved(gameId)
         .then((r) => mounted && setIsSaved(r.is_saved))
-        .catch(() => mounted && setIsSaved(false));
+        .catch((e) => {
+          if (mounted) setIsSaved(false);
+          console.error('fetchIsSaved 실패:', e);
+        });
     }
     return () => {
       mounted = false;
