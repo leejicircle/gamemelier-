@@ -26,7 +26,7 @@ export default function GameDetailClient({ id }: { id: number }) {
         <div>
           <h1 className="text-3xl font-bold text-white">{data.name}</h1>
         </div>
-        <div className="flex mt-10 justify-center gap-10">
+        <div className="flex flex-col desktop:flex-row mt-10 justify-center gap-10">
           <div className="flex-1 space-y-16 max-w-[800px]">
             <GamesCarousel
               videos={data.videos}
@@ -40,15 +40,15 @@ export default function GameDetailClient({ id }: { id: number }) {
                   </p>
                 </div>
               )}
-              <div className="flex justify-center gap-4 items-stretch">
+              <div className="grid grid-cols-2 tablet:grid-cols-4 gap-4 items-stretch">
                 <CardList data={data} />
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-5 w-full desktop:w-[328px] shrink-0">
             <div>
               <Image
-                className="rounded-lg w-[328px] h-[100px]"
+                className="rounded-lg w-full h-[120px] object-cover desktop:w-[328px] desktop:h-[100px]"
                 src={data.header_image!}
                 alt={data.name}
                 width={328}
