@@ -102,11 +102,11 @@ export default function GamesCarousel({
           </Card>
         </div>
 
-        <div className="flex w-[800px] justify-center gap-4 mt-4 overflow-x-auto py-2">
+        <div className="flex w-full max-w-[800px] justify-center gap-4 mt-4 overflow-x-auto py-2">
           {Array.from({ length: skeletonThumbCount }).map((_, index) => (
             <div
               key={index}
-              className="flex p-0 w-[136px] h-[64px] rounded-sm overflow-hidden"
+              className="flex p-0 w-[100px] desktop:w-[136px] h-[64px] shrink-0 rounded-sm overflow-hidden"
               aria-hidden
             >
               <Skeleton className="h-full w-full" />
@@ -171,7 +171,7 @@ export default function GamesCarousel({
         <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Carousel>
 
-      <div className="flex w-[800px] justify-center gap-4 mt-4 overflow-x-auto py-2">
+      <div className="flex w-full max-w-[800px] justify-center gap-4 mt-4 overflow-x-auto py-2">
         {thumbItems.map((item, index) => {
           const isActive = index === current;
           const isVideo = item.kind === 'video';
@@ -182,7 +182,7 @@ export default function GamesCarousel({
               key={index}
               onClick={() => handleThumbClick(index)}
               className={cn(
-                'flex p-0 w-[136px] h-[64px]  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-white',
+                'flex p-0 w-[100px] desktop:w-[136px] h-[64px] shrink-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-white',
 
                 isActive
                   ? 'border-white opacity-100'

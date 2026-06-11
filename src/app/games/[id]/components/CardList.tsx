@@ -8,25 +8,25 @@ export function CardList({ data }: { data: GameDetail }) {
   );
   return (
     <>
-      <Card className="w-48 bg-gray-900 px-4 py-5 gap-2 rounded-xl">
+      <Card className="w-full bg-gray-900 px-4 py-5 gap-2 rounded-xl">
         <CardTitle className="text-gray-500">장르</CardTitle>
         <CardDescription className="text-white font-semibold">
           {matchedGenres.join(', ')}
         </CardDescription>
       </Card>
-      <Card className="w-48 bg-gray-900 px-4 py-5 gap-2 rounded-xl">
+      <Card className="w-full bg-gray-900 px-4 py-5 gap-2 rounded-xl">
         <CardTitle className="text-gray-500">출시일자</CardTitle>
         <CardDescription className="text-white font-semibold">
           {data.release_date_text}
         </CardDescription>
       </Card>
-      <Card className="w-48 bg-gray-900 px-4 py-5 gap-2 rounded-xl">
+      <Card className="w-full bg-gray-900 px-4 py-5 gap-2 rounded-xl">
         <CardTitle className="text-gray-500">발행자</CardTitle>
         <CardDescription className="text-white font-semibold whitespace-pre-line">
           {data.publishers.join('\n')}
         </CardDescription>
       </Card>
-      <Card className="w-48 bg-gray-900 px-4 py-5 gap-2 rounded-xl">
+      <Card className="w-full bg-gray-900 px-4 py-5 gap-2 rounded-xl">
         <CardTitle className="text-gray-500">개발자</CardTitle>
         <CardDescription className="text-white font-semibold whitespace-pre-line">
           {data.developers}
