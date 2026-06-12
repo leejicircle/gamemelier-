@@ -1,7 +1,9 @@
 'use client';
 
 import Image from 'next/image';
+import { ThumbsDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { CardItem } from '@/types/games';
 import SaveToggleButton from './saveToggleButton';
@@ -17,6 +19,10 @@ interface CardsGridProps {
   endIndex?: number;
   totalCount?: number;
   nickname?: string;
+  /** 카드 클릭(상세 이동) 직전 호출 — 클릭 로깅용 */
+  onItemClick?: (gameId: number) => void;
+  /** 전달 시 카드에 ✕(관심 없음) 버튼 노출 — 추천 탭 전용 */
+  onDismiss?: (gameId: number) => void;
 }
 
 export function CardsGrid({
@@ -27,6 +33,8 @@ export function CardsGrid({
   onSavedChange,
   totalCount = 0,
   nickname,
+  onItemClick,
+  onDismiss,
 }: CardsGridProps) {
   const showSkeleton = isLoading ?? items.length === 0;
   const skeletonCount = showSkeleton ? 8 : items.length;
@@ -73,7 +81,10 @@ export function CardsGrid({
               <Card
                 key={game.id}
                 className="flex flex-col gap-2"
-                onClick={() => router.push(`/games/${game.id}`)}
+                onClick={() => {
+                  onItemClick?.(game.id);
+                  router.push(`/games/${game.id}`);
+                }}
               >
                 {game.image ? (
                   <div className="relative gradient-border-wrap w-full aspect-[460/215] p-1 cursor-pointer">
@@ -87,6 +98,25 @@ export function CardsGrid({
                         className=" object-cover rounded-xl"
                       />
                     </div>
+                    {onDismiss && (
+                      <div className="absolute right-16 bottom-4 z-10">
+                        <Button
+                          type="button"
+                          variant="gray"
+                          size="icon"
+                          aria-label="관심 없음"
+                          className="rounded-full bg-gray-900"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            onDismiss(game.id);
+                          }}
+                        >
+                          <ThumbsDown className="h-5 w-5" />
+                          <span className="sr-only">관심 없음</span>
+                        </Button>
+                      </div>
+                    )}
                     <div className="absolute right-4 bottom-4 z-10">
                       <SaveToggleButton
                         gameId={game.id}

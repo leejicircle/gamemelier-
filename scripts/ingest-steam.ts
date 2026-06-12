@@ -7,7 +7,7 @@
  *   Steam Store API의 appdetails 엔드포인트를 호출하여, 최신 메타데이터로
  *   다음 테이블들을 갱신한다:
  *
- *     - games                (이름/요약/이미지/출시일/메타크리틱/리뷰수/refreshed_at)
+ *     - games                (이름/요약/이미지/출시일/메타크리틱/리뷰수/평판/ccu/refreshed_at)
  *     - covers               (1:1 game_id ↔ 표지 url)
  *     - genres               (lookup, id+name UPSERT)
  *     - categories           (lookup, id+name UPSERT)
@@ -25,6 +25,11 @@
  *     - game_screenshots     (DELETE + INSERT 전체 교체)
  *     - game_videos          (DELETE + INSERT 전체 교체)
  *     - game_raw_payloads    (Steam 원본 응답 jsonb — UPSERT)
+ *     - tags / game_tags     (SteamSpy 유저 태그 — DELETE+INSERT, votes=투표수)
+ *
+ *   추가로 게임당 다음 외부 API 를 더 호출한다 (실패해도 게임 처리는 계속):
+ *     - Steam appreviews  → 평판(positive_ratio·total_positive·total_negative·review_score_desc)
+ *     - SteamSpy          → 유저 태그(votes) + 동시접속(ccu)
  *
  * 실행:
  *   npx tsx --env-file=.env.ingest scripts/ingest-steam.ts
@@ -33,7 +38,8 @@
  *
  * 안전장치:
  *   - service_role 키 사용 → RLS 우회. 클라/공개 환경에 절대 노출 금지.
- *   - Steam API rate limit 회피를 위해 호출 간 지연(기본 350ms) 적용.
+ *   - Steam API rate limit 회피를 위해 호출 간 지연 적용
+ *     (appdetails·appreviews 기본 350ms, SteamSpy 1100ms).
  *   - HTTP 403 수신 즉시 중단 (IP 차단 의심 — 수천 건을 의미 없이 시도하는 것 방지).
  *   - HTTP 429 수신 시 Retry-After 만큼 대기 후 1회 재시도, 또 실패면 중단.
  *   - 게임별 처리 중 에러 발생 시 로그만 남기고 다음 게임으로 진행.
@@ -73,6 +79,16 @@ const LIMIT = process.env.INGEST_LIMIT
 
 // refreshed_at 이 N시간 이내면 스킵. 0이면 무시.
 const SKIP_FRESH_HOURS = Number(process.env.INGEST_SKIP_FRESH_HOURS ?? 0);
+
+// SteamSpy 호출 간 지연(ms). SteamSpy 자체 권장이 ≈1req/s 라 기본 1100ms.
+const STEAMSPY_DELAY_MS = Number(process.env.INGEST_STEAMSPY_DELAY_MS ?? 1100);
+
+// 평판(appreviews)·태그(SteamSpy) 보강 적재 on/off. 'false' 로 끄면 기존 동작.
+const FETCH_REVIEWS = process.env.INGEST_FETCH_REVIEWS !== 'false';
+const FETCH_TAGS = process.env.INGEST_FETCH_TAGS !== 'false';
+
+// game_tags 에 적재할 태그 상위 개수(투표수 기준). 꼬리표 과다 방지.
+const TAG_TOP_N = Number(process.env.INGEST_TAG_TOP_N ?? 20);
 
 // service_role 키로 클라이언트 생성. RLS 우회 가능.
 const sb: SupabaseClient = createClient(SUPABASE_URL, SERVICE_KEY, {
@@ -145,6 +161,20 @@ type FetchResult =
   | { kind: 'blocked' }
   | { kind: 'http-error'; status: number }
   | { kind: 'network'; message: string };
+
+/** Steam appreviews 의 query_summary 에서 우리가 쓰는 평판 요약. */
+type ReviewSummary = {
+  positive_ratio: number | null; // total_positive / total_reviews (0~1)
+  total_positive: number | null;
+  total_negative: number | null;
+  review_score_desc: string | null;
+};
+
+/** SteamSpy 에서 가져오는 유저 태그(이름→투표수)와 동시 접속. */
+type SteamSpyData = {
+  tags: { name: string; votes: number }[];
+  ccu: number | null;
+};
 
 // -----------------------------------------------------------------------------
 // 유틸 함수
@@ -243,6 +273,81 @@ async function fetchAppDetails(appid: number): Promise<FetchResult> {
 }
 
 /**
+ * Steam appreviews API 로 리뷰 평판 요약을 가져온다.
+ * store.steampowered.com 호스트라 appdetails 와 레이트리밋 풀을 공유한다고 보고,
+ * 호출부에서 동일한 DELAY 를 적용한다. 실패는 null 로 돌려 게임 처리를 막지 않는다.
+ */
+async function fetchReviewSummary(
+  appid: number,
+): Promise<ReviewSummary | null> {
+  const url =
+    `https://store.steampowered.com/appreviews/${appid}` +
+    `?json=1&language=all&purchase_type=all&num_per_page=0`;
+  try {
+    const res = await fetch(url, { headers: { accept: 'application/json' } });
+    if (!res.ok) {
+      console.warn(`[appreviews ${res.status}] ${appid}`);
+      return null;
+    }
+    const json = (await res.json().catch(() => null)) as {
+      success?: number;
+      query_summary?: {
+        review_score_desc?: string;
+        total_positive?: number;
+        total_negative?: number;
+        total_reviews?: number;
+      };
+    } | null;
+    if (!json || json.success !== 1 || !json.query_summary) return null;
+
+    const q = json.query_summary;
+    const total = q.total_reviews ?? 0;
+    const pos = q.total_positive ?? 0;
+    return {
+      positive_ratio: total > 0 ? pos / total : null,
+      total_positive: q.total_positive ?? null,
+      total_negative: q.total_negative ?? null,
+      review_score_desc: q.review_score_desc ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * SteamSpy 로 유저 태그(이름→투표수)와 동시 접속(ccu)을 가져온다.
+ * 별도 호스트(steamspy.com)·자체 레이트리밋(≈1req/s)이라 호출부에서
+ * STEAMSPY_DELAY_MS 를 적용한다. 실패는 null.
+ */
+async function fetchSteamSpy(appid: number): Promise<SteamSpyData | null> {
+  const url = `https://steamspy.com/api.php?request=appdetails&appid=${appid}`;
+  try {
+    const res = await fetch(url, { headers: { accept: 'application/json' } });
+    if (!res.ok) {
+      console.warn(`[steamspy ${res.status}] ${appid}`);
+      return null;
+    }
+    const json = (await res.json().catch(() => null)) as {
+      tags?: Record<string, number> | unknown[];
+      ccu?: number;
+    } | null;
+    if (!json) return null;
+
+    // tags 는 보통 { "태그명": 투표수 } 객체지만, 데이터가 없으면 빈 배열([])로 온다.
+    const tags =
+      json.tags && !Array.isArray(json.tags)
+        ? Object.entries(json.tags).map(([name, votes]) => ({
+            name,
+            votes: Number(votes) || 0,
+          }))
+        : [];
+    return { tags, ccu: typeof json.ccu === 'number' ? json.ccu : null };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * developers / publishers 처럼 Steam 이 ID 없이 이름만 주는 lookup 테이블에서
  * 이름으로 기존 row 를 찾고, 없으면 새로 INSERT 후 id 를 반환.
  *
@@ -277,6 +382,34 @@ async function ensureLookupByName(
   return inserted ? (inserted.id as number) : null;
 }
 
+/**
+ * tags 테이블에서 이름으로 찾고 없으면 insert 후 id 반환. tags.name 은 unique.
+ * 단일 스크립트라 race condition 무시.
+ */
+async function ensureTag(name: string): Promise<number | null> {
+  const { data: existing, error: selErr } = await sb
+    .from('tags')
+    .select('id')
+    .eq('name', name)
+    .maybeSingle();
+  if (selErr) {
+    console.warn(`[tags sel] ${name}: ${selErr.message}`);
+    return null;
+  }
+  if (existing) return existing.id as number;
+
+  const { data: inserted, error: insErr } = await sb
+    .from('tags')
+    .insert({ name })
+    .select('id')
+    .single();
+  if (insErr) {
+    console.warn(`[tags ins] ${name}: ${insErr.message}`);
+    return null;
+  }
+  return inserted ? (inserted.id as number) : null;
+}
+
 // -----------------------------------------------------------------------------
 // 게임 1건 처리 — 모든 관련 테이블 갱신
 // -----------------------------------------------------------------------------
@@ -291,27 +424,45 @@ async function ensureLookupByName(
  *
  * 반환값: true = 갱신 성공, false = 부분 실패 (현재는 항상 true 에 가깝다)
  */
-async function ingestGame(appid: number, data: SteamAppData): Promise<boolean> {
+async function ingestGame(
+  appid: number,
+  data: SteamAppData,
+  review: ReviewSummary | null,
+  spy: SteamSpyData | null,
+): Promise<boolean> {
   const now = new Date().toISOString();
   const releaseText = data.release_date?.date ?? null;
   const firstReleaseDate = parseKoreanDate(releaseText);
 
   // (1) games — UPDATE (id 는 이미 존재함을 전제, INSERT 안 함)
+  // 평판(review)·ccu 는 fetch 성공 시에만 포함한다. 실패 시 해당 컬럼을 건드리지
+  // 않아, 이전 적재값을 null 로 덮어쓰지 않는다.
+  const gameUpdate: Record<string, unknown> = {
+    name: data.name ?? '',
+    type: data.type ?? null,
+    summary: data.short_description ?? null,
+    header_image: data.header_image ?? null,
+    first_release_date: firstReleaseDate,
+    release_date_text: releaseText,
+    metacritic_score: data.metacritic?.score ?? null,
+    metacritic_url: data.metacritic?.url ?? null,
+    reviews_total: data.recommendations?.total ?? null,
+    refreshed_at: now,
+    updated_at: now,
+  };
+  if (review) {
+    gameUpdate.positive_ratio = review.positive_ratio;
+    gameUpdate.total_positive = review.total_positive;
+    gameUpdate.total_negative = review.total_negative;
+    gameUpdate.review_score_desc = review.review_score_desc;
+  }
+  if (spy && spy.ccu != null) {
+    gameUpdate.ccu = spy.ccu;
+  }
+
   const { error: gameErr } = await sb
     .from('games')
-    .update({
-      name: data.name ?? '',
-      type: data.type ?? null,
-      summary: data.short_description ?? null,
-      header_image: data.header_image ?? null,
-      first_release_date: firstReleaseDate,
-      release_date_text: releaseText,
-      metacritic_score: data.metacritic?.score ?? null,
-      metacritic_url: data.metacritic?.url ?? null,
-      reviews_total: data.recommendations?.total ?? null,
-      refreshed_at: now,
-      updated_at: now,
-    })
+    .update(gameUpdate)
     .eq('id', appid);
   if (gameErr) {
     console.warn(`[games update] ${appid}: ${gameErr.message}`);
@@ -489,6 +640,27 @@ async function ingestGame(appid: number, data: SteamAppData): Promise<boolean> {
     );
   }
 
+  // (13) game_tags — SteamSpy 태그(이름→투표수) 상위 N개. 전체 교체.
+  //       spy 가 null(fetch 실패)이거나 태그가 없으면 기존 태그를 보존한다.
+  if (spy && spy.tags.length > 0) {
+    const top = [...spy.tags]
+      .sort((a, b) => b.votes - a.votes)
+      .slice(0, TAG_TOP_N);
+    const rows: { game_id: number; tag_id: number; votes: number }[] = [];
+    for (const t of top) {
+      const tagId = await ensureTag(t.name);
+      if (tagId != null) {
+        rows.push({ game_id: appid, tag_id: tagId, votes: t.votes });
+      }
+    }
+    // rows 가 비어 있으면(ensureTag 가 전부 실패) DELETE 도 건너뛴다.
+    // 그러지 않으면 일시적 쓰기 오류로 기존 태그가 통째로 사라질 수 있다.
+    if (rows.length > 0) {
+      await sb.from('game_tags').delete().eq('game_id', appid);
+      await sb.from('game_tags').insert(rows);
+    }
+  }
+
   console.log(`[ok]   ${appid}  ${data.name ?? '(no name)'}`);
   return true;
 }
@@ -595,9 +767,23 @@ async function main() {
         fail++;
         break;
       case 'ok':
-        // (2-d) 정상 — data 를 ingestGame 에 주입해 DB 반영
+        // (2-d) 정상 — 평판(appreviews)·태그(SteamSpy)를 추가로 가져와
+        //       ingestGame 에 주입해 DB 반영. 각 fetch 는 실패해도 null 로
+        //       돌아와 게임 처리를 막지 않는다.
         try {
-          const r = await ingestGame(appid, result.data);
+          let review: ReviewSummary | null = null;
+          let spy: SteamSpyData | null = null;
+          // appreviews 는 store 호스트라 appdetails 와 한도 공유 → DELAY 적용
+          if (FETCH_REVIEWS) {
+            await sleep(DELAY_MS);
+            review = await fetchReviewSummary(appid);
+          }
+          // SteamSpy 는 별도 호스트·자체 한도(≈1req/s) → STEAMSPY_DELAY 적용
+          if (FETCH_TAGS) {
+            await sleep(STEAMSPY_DELAY_MS);
+            spy = await fetchSteamSpy(appid);
+          }
+          const r = await ingestGame(appid, result.data, review, spy);
           if (r) ok++;
           else fail++;
         } catch (e) {

@@ -4,6 +4,18 @@ export type CardItem = {
   image: string | null;
   category?: string;
 };
+
+/** 찜한 게임 중 할인 중인 항목 (list_saved_on_sale RPC) */
+export type SaleItem = {
+  id: number;
+  name: string;
+  image: string | null;
+  discount_percent: number;
+  initial_cents: number | null;
+  final_cents: number | null;
+  currency: string | null;
+  saved_at: string;
+};
 export type SavedGameItem = {
   saved_at: string;
   id: number;

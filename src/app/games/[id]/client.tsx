@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useGameDetail } from '@/lib/hooks/useGameDetail';
 import GamesCarousel from './components/GamesCarousel';
 import Image from 'next/image';
@@ -7,9 +8,16 @@ import { Badge } from '@/components/ui/badge';
 import ConfirmBuy from './components/ConfirmBuy';
 import WishListButton from './components/WishListButton';
 import { CardList } from './components/CardList';
+import { SimilarGames } from './components/SimilarGames';
+import { logEvent } from '@/lib/api/eventsApi';
 
 export default function GameDetailClient({ id }: { id: number }) {
   const { data, isLoading, isError, error } = useGameDetail(id);
+
+  // 상세 페이지 진입 로그 (비로그인이면 내부에서 no-op)
+  useEffect(() => {
+    void logEvent({ game_id: id, event_type: 'detail_view', source: 'detail' });
+  }, [id]);
 
   if (isLoading) return <div>로딩 중...</div>;
   if (isError) return <div>에러 발생: {(error as Error).message}</div>;
@@ -89,6 +97,8 @@ export default function GameDetailClient({ id }: { id: number }) {
             </div>
           </div>
         </div>
+
+        <SimilarGames gameId={data.id} />
       </div>
     </section>
   );
