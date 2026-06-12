@@ -36,7 +36,7 @@ export default function RecommendClient({
       <CardsGrid
         title={ssrNickname ? '님을 위한 추천 게임' : '개인 맞춤 추천'}
         nickname={ssrNickname}
-        items={data.slice(0, 6)}
+        items={data.slice(0, ssrLimit)}
         isLoading={isLoading}
       />
       {isError && (
