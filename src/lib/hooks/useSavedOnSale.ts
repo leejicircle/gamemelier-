@@ -15,7 +15,10 @@ export function useSavedOnSale(userId?: string, limit = 6) {
       const { data, error } = await supabase.rpc('list_saved_on_sale', {
         p_limit: limit,
       });
-      if (error) return [];
+      if (error) {
+        console.error('list_saved_on_sale 실패:', error.message);
+        return [];
+      }
       return (data ?? []) as SaleItem[];
     },
     staleTime: 60_000,

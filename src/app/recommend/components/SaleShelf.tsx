@@ -22,7 +22,7 @@ export function SaleShelf({ items }: { items: SaleItem[] }) {
 
   return (
     <section className="mt-16">
-      <h2 className="text-3xl font-bold text-white mb-6">
+      <h2 className="text-2xl tablet:text-3xl font-bold text-white mb-6">
         찜한 게임이 세일 중
       </h2>
       <div className="flex flex-col gap-4">

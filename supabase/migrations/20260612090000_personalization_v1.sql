@@ -52,6 +52,8 @@ create table if not exists public.user_game_feedback (
 
 alter table public.user_game_feedback enable row level security;
 
+-- for all(select/insert/update/delete) 단일 정책: 본인 행 한정이라 과권한 아님.
+-- 현재 앱은 upsert(insert/update)만 사용하지만, 추후 평가 삭제 등을 위해 delete 도 열어둔다.
 drop policy if exists user_game_feedback_all_own on public.user_game_feedback;
 create policy user_game_feedback_all_own on public.user_game_feedback
   for all to authenticated

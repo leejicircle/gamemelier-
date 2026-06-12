@@ -16,7 +16,10 @@ export function useSimilarGames(gameId?: number, limit = 6) {
         p_game_id: gameId,
         p_limit: limit,
       });
-      if (error) return [];
+      if (error) {
+        console.error('list_similar_games 실패:', error.message);
+        return [];
+      }
       return (data ?? []) as CardItem[];
     },
     staleTime: 5 * 60_000,

@@ -12,7 +12,7 @@ import { useSavedOnSale } from '@/lib/hooks/useSavedOnSale';
 import { useDismissedIds } from '@/lib/hooks/useDismissedIds';
 import { dismissGame, undoDismissGame } from '@/lib/api/feedbackApi';
 import { logEvent, logEvents } from '@/lib/api/eventsApi';
-import type { CardItem, SaleItem } from '@/types';
+import type { CardItem } from '@/types';
 
 type Props = {
   ssrUserId?: string;
@@ -69,7 +69,7 @@ export default function RecommendClient({
   }, [data, dismissedSet]);
 
   useImpressionLog(visible, 'recommend_main');
-  useImpressionLog(saleItems as SaleItem[], 'wishlist_sale');
+  useImpressionLog(saleItems, 'wishlist_sale');
 
   if (!ssrUserId) {
     return <GuestPage />;
@@ -83,7 +83,7 @@ export default function RecommendClient({
         event_type: 'dismiss',
         source: 'recommend_main',
       });
-      qc.invalidateQueries({ queryKey: ['dismissed-ids'] });
+      qc.invalidateQueries({ queryKey: ['dismissed-ids', ssrUserId] });
       toast('이 게임은 앞으로 덜 추천할게요.', {
         action: {
           label: '실행취소',
