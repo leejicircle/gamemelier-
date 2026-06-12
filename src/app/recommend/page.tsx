@@ -19,7 +19,8 @@ export default async function RecommendPage({
   const budgetCents = params?.budgetCents
     ? Number(params.budgetCents)
     : undefined;
-  const limit = 6;
+  // '관심 없음' 제외 후에도 6장을 채울 수 있도록 여유분 포함 12장 조회
+  const limit = 12;
   const excludeUpcoming = params?.excludeUpcoming !== 'false';
 
   const qc = new QueryClient();

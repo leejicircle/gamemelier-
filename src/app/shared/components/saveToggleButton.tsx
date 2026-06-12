@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Heart, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { toggleSaved, fetchIsSaved } from '@/lib/api/savedGamesApi';
+import { logEvent } from '@/lib/api/eventsApi';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -53,6 +54,10 @@ export default function SaveToggleButton({
       const { saved } = await toggleSaved(gameId);
       setIsSaved(saved);
       onChange?.(saved);
+      void logEvent({
+        game_id: gameId,
+        event_type: saved ? 'save' : 'unsave',
+      });
     } catch (e) {
       setIsSaved(isSaved ?? false);
       toast.error(
