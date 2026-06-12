@@ -11,7 +11,9 @@ import { logEvent } from '@/lib/api/eventsApi';
 export function SimilarGames({ gameId }: { gameId: number }) {
   const { data = [], isLoading } = useSimilarGames(gameId);
 
-  if (!isLoading && data.length === 0) return null;
+  // 로딩 중이거나 비슷한 게임이 없으면 섹션 자체를 숨긴다.
+  // (헤더가 잠깐 떴다 사라지는 깜빡임을 막기 위해 데이터가 확정된 뒤에만 노출)
+  if (isLoading || data.length === 0) return null;
 
   return (
     <section className="mt-16">
@@ -20,7 +22,6 @@ export function SimilarGames({ gameId }: { gameId: number }) {
       </h2>
       <CardsGrid
         items={data}
-        isLoading={isLoading}
         onItemClick={(id) =>
           void logEvent({
             game_id: id,
