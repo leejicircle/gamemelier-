@@ -20,7 +20,7 @@ export default async function RecommendPage({
     ? Number(params.budgetCents)
     : undefined;
   const limit = 6;
-  const excludeUpcoming = params?.excludeUpcoming === 'true';
+  const excludeUpcoming = params?.excludeUpcoming !== 'false';
 
   const qc = new QueryClient();
   const supabase = await createClient();

@@ -15,7 +15,9 @@ type Props = {
 
 export default function RecommendClient({
   ssrUserId,
-  ssrLimit = 30,
+  ssrBudgetCents,
+  ssrLimit = 6,
+  ssrExcludeUpcoming = true,
   ssrNickname,
 }: Props) {
   const {
@@ -23,7 +25,7 @@ export default function RecommendClient({
     isLoading,
     isError,
     error,
-  } = useRecommendCards(ssrUserId, ssrLimit);
+  } = useRecommendCards(ssrUserId, ssrBudgetCents, ssrLimit, ssrExcludeUpcoming);
 
   if (!ssrUserId) {
     return <GuestPage />;

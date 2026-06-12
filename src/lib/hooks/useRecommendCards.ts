@@ -6,7 +6,7 @@ import { CardItem } from '@/types';
 export function useRecommendCards(
   userId?: string,
   budgetCents?: number,
-  limit = 30,
+  limit = 6,
   excludeUpcoming = true,
 ) {
   return useQuery({
