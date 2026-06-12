@@ -13,7 +13,7 @@
 -- 1) games — 평판/인기 컬럼 추가 (모두 nullable, 적재 전엔 NULL)
 -- -----------------------------------------------------------------------------
 alter table public.games
-  add column if not exists positive_ratio    real,     -- total_positive / total_reviews (0~1)
+  add column if not exists positive_ratio    double precision, -- total_positive / total_reviews (0~1)
   add column if not exists total_positive    integer,
   add column if not exists total_negative    integer,
   add column if not exists review_score_desc text,      -- "Overwhelmingly Positive" 등 (영문 원문)
@@ -36,8 +36,9 @@ create table if not exists public.game_tags (
   votes   integer,
   primary key (game_id, tag_id)
 );
+-- game_id 단독 조회(WHERE game_id = ?)는 복합 PK(game_id, tag_id) 인덱스가
+-- 커버하므로 별도 인덱스를 만들지 않는다. tag_id 단독 조회만 인덱스가 필요.
 create index if not exists game_tags_tag_idx on public.game_tags (tag_id);
-create index if not exists game_tags_game_idx on public.game_tags (game_id);
 
 -- -----------------------------------------------------------------------------
 -- 4) RLS — 카탈로그 데이터이므로 공개 읽기 허용, 쓰기는 service_role(적재) 전용.

@@ -38,7 +38,8 @@
  *
  * 안전장치:
  *   - service_role 키 사용 → RLS 우회. 클라/공개 환경에 절대 노출 금지.
- *   - Steam API rate limit 회피를 위해 호출 간 지연(기본 350ms) 적용.
+ *   - Steam API rate limit 회피를 위해 호출 간 지연 적용
+ *     (appdetails·appreviews 기본 350ms, SteamSpy 1100ms).
  *   - HTTP 403 수신 즉시 중단 (IP 차단 의심 — 수천 건을 의미 없이 시도하는 것 방지).
  *   - HTTP 429 수신 시 Retry-After 만큼 대기 후 1회 재시도, 또 실패면 중단.
  *   - 게임별 처리 중 에러 발생 시 로그만 남기고 다음 게임으로 진행.
@@ -284,7 +285,10 @@ async function fetchReviewSummary(
     `?json=1&language=all&purchase_type=all&num_per_page=0`;
   try {
     const res = await fetch(url, { headers: { accept: 'application/json' } });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn(`[appreviews ${res.status}] ${appid}`);
+      return null;
+    }
     const json = (await res.json().catch(() => null)) as {
       success?: number;
       query_summary?: {
@@ -319,7 +323,10 @@ async function fetchSteamSpy(appid: number): Promise<SteamSpyData | null> {
   const url = `https://steamspy.com/api.php?request=appdetails&appid=${appid}`;
   try {
     const res = await fetch(url, { headers: { accept: 'application/json' } });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn(`[steamspy ${res.status}] ${appid}`);
+      return null;
+    }
     const json = (await res.json().catch(() => null)) as {
       tags?: Record<string, number> | unknown[];
       ccu?: number;
@@ -634,7 +641,7 @@ async function ingestGame(
   }
 
   // (13) game_tags — SteamSpy 태그(이름→투표수) 상위 N개. 전체 교체.
-  //       spy 가 null(fetch 실패)이면 기존 태그를 보존한다.
+  //       spy 가 null(fetch 실패)이거나 태그가 없으면 기존 태그를 보존한다.
   if (spy && spy.tags.length > 0) {
     const top = [...spy.tags]
       .sort((a, b) => b.votes - a.votes)
@@ -646,8 +653,10 @@ async function ingestGame(
         rows.push({ game_id: appid, tag_id: tagId, votes: t.votes });
       }
     }
-    await sb.from('game_tags').delete().eq('game_id', appid);
+    // rows 가 비어 있으면(ensureTag 가 전부 실패) DELETE 도 건너뛴다.
+    // 그러지 않으면 일시적 쓰기 오류로 기존 태그가 통째로 사라질 수 있다.
     if (rows.length > 0) {
+      await sb.from('game_tags').delete().eq('game_id', appid);
       await sb.from('game_tags').insert(rows);
     }
   }
