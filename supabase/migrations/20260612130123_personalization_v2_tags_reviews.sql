@@ -1,6 +1,7 @@
 -- =============================================================================
 -- 개인화 v2-1: Steam 유저 태그 + 리뷰 평판 데이터 토대
--- 적용: Supabase Dashboard > SQL Editor 에 붙여넣어 실행
+-- 적용: 이미 prod 에 적용됨 (Supabase MCP, 이력 version 20260612130123).
+--       신규 환경은 `supabase db push` 로 적용 (파일명 timestamp = 이력 version).
 -- 참고: docs/personalization-plan.md 5장
 --
 -- 적재는 scripts/ingest-steam.ts 가 채운다:
