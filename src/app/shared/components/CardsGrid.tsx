@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { X } from 'lucide-react';
+import { ThumbsDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -112,7 +112,7 @@ export function CardsGrid({
                             onDismiss(game.id);
                           }}
                         >
-                          <X className="h-5 w-5" />
+                          <ThumbsDown className="h-5 w-5" />
                           <span className="sr-only">관심 없음</span>
                         </Button>
                       </div>

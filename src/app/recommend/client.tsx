@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -60,13 +60,19 @@ export default function RecommendClient({
   const { data: dismissedSet } = useDismissedIds(ssrUserId);
   const { data: saleItems = [] } = useSavedOnSale(ssrUserId);
 
+  // 서버 반영을 기다리지 않고 즉시 카드를 빼기 위한 낙관적 상태.
+  // 실패하면 롤백한다.
+  const [locallyDismissed, setLocallyDismissed] = useState<Set<number>>(
+    new Set(),
+  );
+
   // 선반 A — '관심 없음' 게임을 제외하고 6장 노출 (여유분이 빈자리를 채운다)
   const visible: CardItem[] = useMemo(() => {
-    const filtered = dismissedSet
-      ? data.filter((g) => !dismissedSet.has(g.id))
-      : data;
+    const filtered = data.filter(
+      (g) => !locallyDismissed.has(g.id) && !dismissedSet?.has(g.id),
+    );
     return filtered.slice(0, VISIBLE_COUNT);
-  }, [data, dismissedSet]);
+  }, [data, dismissedSet, locallyDismissed]);
 
   useImpressionLog(visible, 'recommend_main');
   useImpressionLog(saleItems, 'wishlist_sale');
@@ -75,8 +81,18 @@ export default function RecommendClient({
     return <GuestPage />;
   }
 
+  const rollbackDismiss = (gameId: number) =>
+    setLocallyDismissed((prev) => {
+      const next = new Set(prev);
+      next.delete(gameId);
+      return next;
+    });
+
   async function handleDismiss(gameId: number) {
+    // 1) 낙관적으로 즉시 카드 제거
+    setLocallyDismissed((prev) => new Set(prev).add(gameId));
     try {
+      // 2) 서버 반영
       await dismissGame(gameId);
       void logEvent({
         game_id: gameId,
@@ -89,17 +105,20 @@ export default function RecommendClient({
           label: '실행취소',
           onClick: () => {
             undoDismissGame(gameId)
-              .then(() =>
-                qc.invalidateQueries({ queryKey: ['dismissed-ids'] }),
-              )
-              .catch(() => toast.error('실행취소에 실패했습니다.'));
+              .then(() => {
+                rollbackDismiss(gameId);
+                qc.invalidateQueries({
+                  queryKey: ['dismissed-ids', ssrUserId],
+                });
+              })
+              .catch(() => toast('실행취소에 실패했어요.'));
           },
         },
       });
     } catch (e) {
-      toast.error(
-        e instanceof Error ? e.message : '처리 중 오류가 발생했습니다.',
-      );
+      // 3) 실패 시 카드를 되돌린다. 보조 기능이라 요란한 에러는 띄우지 않는다.
+      rollbackDismiss(gameId);
+      console.error('dismissGame 실패:', e);
     }
   }
 
