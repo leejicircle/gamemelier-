@@ -7,6 +7,7 @@ import { toggleSaved, fetchIsSaved } from '@/lib/api/savedGamesApi';
 import { logEvent } from '@/lib/api/eventsApi';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/store/useAuthStore';
 
 type Props = {
   className?: string;
@@ -22,24 +23,36 @@ export default function SaveToggleButton({
 
   onChange,
 }: Props) {
+  const userId = useAuthStore((s) => s.user?.id);
   const [isSaved, setIsSaved] = useState<boolean | null>(initialSaved ?? null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // 상위에서 savedSet 으로 초기값을 받은 경우는 그 값을 신뢰하고 재조회하지 않는다.
+    if (initialSaved != null) return;
+
     let mounted = true;
-    if (isSaved == null) {
-      fetchIsSaved(gameId)
-        .then((r) => mounted && setIsSaved(r.is_saved))
-        .catch((e) => {
-          if (mounted) setIsSaved(false);
-          console.error('fetchIsSaved 실패:', e);
-        });
-    }
+
+    (async () => {
+      // 비로그인: 세션이 없으면 찜 여부 조회를 건너뛰고 미저장으로 둔다.
+      // (게스트마다 카드 수만큼 인증 실패 RPC + 콘솔 에러가 쏟아지던 문제 방지)
+      if (!userId) {
+        if (mounted) setIsSaved(false);
+        return;
+      }
+      try {
+        const r = await fetchIsSaved(gameId);
+        if (mounted) setIsSaved(r.is_saved);
+      } catch (e) {
+        if (mounted) setIsSaved(false);
+        console.error('fetchIsSaved 실패:', e);
+      }
+    })();
+
     return () => {
       mounted = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId]);
+  }, [gameId, userId, initialSaved]);
 
   async function onClick(e: React.MouseEvent) {
     e.stopPropagation();
