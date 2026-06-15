@@ -19,7 +19,7 @@ export default function GuestPage() {
       <div className="absolute inset-0 bg-black/60" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#18181B]" />
 
-      <div className="relative z-10 flex-row min-h-screen items-center justify-center">
+      <div className="relative z-10 flex flex-col min-h-screen items-center justify-center">
         <div className="justify-center flex pt-20">
           <Image
             src={LogoSvg}
@@ -27,12 +27,12 @@ export default function GuestPage() {
             width={290}
             height={240}
             priority
-            className="w-auto h-auto"
+            className="w-[200px] tablet:w-[290px] h-auto"
           />
         </div>
 
-        <div className="py-4 text-center">
-          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white">
+        <div className="py-4 text-center px-4">
+          <h1 className="text-3xl tablet:text-5xl font-extrabold tracking-tight text-white">
             <span className="align-middle">Gamemelier</span>
             <span className="ml-2 font-semibold text-white align-middle">
               에 오신걸 환영합니다
@@ -52,14 +52,14 @@ export default function GuestPage() {
             <Button
               asChild
               variant="gray"
-              className="px-5 py-5 md:px-6 md:py-6 text-sm md:text-base"
+              className="px-5 py-5 tablet:px-6 tablet:py-6 text-sm tablet:text-base"
             >
               <Link href={'/signup'}>회원가입</Link>
             </Button>
             <Button
               asChild
               variant="purple"
-              className="px-5 py-5 md:px-6 md:py-6 text-sm md:text-base"
+              className="px-5 py-5 tablet:px-6 tablet:py-6 text-sm tablet:text-base"
             >
               <Link href={'/login'}>로그인 GO</Link>
             </Button>

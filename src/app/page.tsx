@@ -78,7 +78,7 @@ export default async function MainPage() {
   return (
     <>
       <section>
-        <div className="absolute top-0 left-0 -z-2 h-[445px] w-full">
+        <div className="absolute top-0 left-0 -z-2 h-[280px] tablet:h-[380px] desktop:h-[445px] w-full">
           <Image
             src={bgImage}
             alt="hero image"
