@@ -16,7 +16,7 @@ export default function MainClient({
     useUpcomingCardsPage(1, 10);
   const upcoming = upcomingData?.items ?? [];
   return (
-    <div className="space-y-[120px] mb-[120px]">
+    <div className="space-y-[60px] tablet:space-y-[80px] desktop:space-y-[120px] mb-[60px] tablet:mb-[80px] desktop:mb-[120px]">
       <CardsCarousel
         title="인기게임 TOP"
         items={cardsQuery.data ?? []}
