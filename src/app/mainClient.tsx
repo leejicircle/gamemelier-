@@ -27,7 +27,6 @@ export default function MainClient({
         items={upcoming}
         isLoading={isUpcomingLoading}
       />
-      <div></div>
     </div>
   );
 }
