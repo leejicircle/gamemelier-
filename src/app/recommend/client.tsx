@@ -96,6 +96,13 @@ export default function RecommendClient({
       return next;
     });
 
+  // 찜/해제 시 두 추천 선반을 갱신한다 — 저장한 게임은 추천 후보에서 빠져야 하고,
+  // 해제하면 다시 후보가 될 수 있으므로 상태 변화에 관계없이 무효화한다.
+  const handleSavedChange = () => {
+    qc.invalidateQueries({ queryKey: ['recommend-cards', ssrUserId] });
+    qc.invalidateQueries({ queryKey: ['recent-save-recs', ssrUserId] });
+  };
+
   async function handleDismiss(gameId: number) {
     // 1) 낙관적으로 즉시 카드 제거
     setLocallyDismissed((prev) => new Set(prev).add(gameId));
@@ -114,9 +121,12 @@ export default function RecommendClient({
             undoDismissGame(gameId)
               .then(() => {
                 rollbackDismiss(gameId);
-                // 서버가 다시 추천 후보에 포함하도록 추천 쿼리 무효화
+                // 서버가 다시 추천 후보에 포함하도록 두 추천 선반 무효화
                 qc.invalidateQueries({
                   queryKey: ['recommend-cards', ssrUserId],
+                });
+                qc.invalidateQueries({
+                  queryKey: ['recent-save-recs', ssrUserId],
                 });
               })
               .catch(() => toast('실행취소에 실패했어요.'));
@@ -140,6 +150,7 @@ export default function RecommendClient({
         items={visible}
         isLoading={isLoading}
         onDismiss={handleDismiss}
+        onSavedChange={handleSavedChange}
         onItemClick={(gameId) =>
           void logEvent({
             game_id: gameId,
@@ -154,7 +165,10 @@ export default function RecommendClient({
         </p>
       )}
 
-      <RecentSaveShelf items={visibleRecentSave} />
+      <RecentSaveShelf
+        items={visibleRecentSave}
+        onSavedChange={handleSavedChange}
+      />
       <SaleShelf items={saleItems} />
     </section>
   );
