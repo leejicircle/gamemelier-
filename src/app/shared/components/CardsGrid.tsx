@@ -4,10 +4,21 @@ import Image from 'next/image';
 import { ThumbsDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { CardItem } from '@/types/games';
+import { cn } from '@/lib/utils';
+import type { CardItem, ReasonKind } from '@/types/games';
 import SaveToggleButton from './saveToggleButton';
 import { useRouter } from 'next/navigation';
+
+/** 추천 이유 배지 색상 — 취향(보라) / 할인(로즈) / 평판(에메랄드) / 최신작(스카이) */
+const REASON_STYLES: Record<ReasonKind, string> = {
+  genre: 'border-purple2/40 text-purple2 bg-purple2/10',
+  tag: 'border-purple2/40 text-purple2 bg-purple2/10',
+  discount: 'border-rose-400/40 text-rose-300 bg-rose-500/10',
+  quality: 'border-emerald-400/40 text-emerald-300 bg-emerald-500/10',
+  recency: 'border-sky-400/40 text-sky-300 bg-sky-500/10',
+};
 
 interface CardsGridProps {
   items: CardItem[];
@@ -130,6 +141,19 @@ export function CardsGrid({
                 )}
 
                 <CardContent className="bg-transparent">
+                  {game.reason && (
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        'mb-2 font-medium',
+                        game.reason_kind
+                          ? REASON_STYLES[game.reason_kind]
+                          : 'border-gray-700 text-gray-400',
+                      )}
+                    >
+                      {game.reason}
+                    </Badge>
+                  )}
                   <h3 className="line-clamp-2 text-md font-semibold text-gray-500">
                     {game.name}
                   </h3>
