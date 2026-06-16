@@ -85,6 +85,7 @@ export default async function MainPage() {
             fill
             sizes="100vw"
             priority
+            quality={40}
             className="opacity-30 object-cover"
           />
         </div>
