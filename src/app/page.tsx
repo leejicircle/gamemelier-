@@ -1,5 +1,7 @@
 import Image from 'next/image';
-import bgImage from '@/assets/BgImage.png';
+// LCP 요소(장식 배경). Vercel 이미지 최적화 왕복(콜드 지연)을 피하려 미리 압축한
+// 정적 WebP(16KB)를 unoptimized 로 엣지 CDN 에서 직접 서빙한다. 원본 = BgImage.png.
+import bgImage from '@/assets/BgImageHero.webp';
 import MainClient from './mainClient';
 import {
   dehydrate,
@@ -83,9 +85,8 @@ export default async function MainPage() {
             src={bgImage}
             alt="hero image"
             fill
-            sizes="100vw"
             priority
-            quality={40}
+            unoptimized
             className="opacity-30 object-cover"
           />
         </div>
