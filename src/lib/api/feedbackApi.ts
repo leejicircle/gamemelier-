@@ -36,16 +36,3 @@ export async function undoDismissGame(gameId: number) {
     .eq('game_id', gameId);
   if (error) throw error;
 }
-
-/** 내가 '관심 없음' 표시한 게임 id 목록. */
-export async function fetchDismissedIds(): Promise<number[]> {
-  const userId = await requireUserId();
-  const { data, error } = await supabase
-    .from('user_game_feedback')
-    .select('game_id')
-    .eq('user_id', userId)
-    .eq('dismissed', true);
-  if (error) throw error;
-  // bigint 컬럼이 string 으로 직렬화되는 경우를 대비해 명시 변환
-  return (data ?? []).map((r) => Number(r.game_id));
-}
