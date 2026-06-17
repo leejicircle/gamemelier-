@@ -2,7 +2,7 @@
 -- v3 온보딩 게임 픽커: 취향 시드 + 픽커용 인기작 목록
 -- 적용: 이미 prod 적용됨 (MCP, 이력 version 20260617122105). 신규 환경은 `supabase db push`.
 -- 참고: docs/personalization-plan.md 6.4(온보딩 게임 픽커)
--- 후속(선택): seed RPC authenticated 제한(revoke from public)·list_picker_games covers 조인 — self-review.
+-- 후속(선택): list_picker_games covers 조인(perf 미세개선) — self-review.
 --
 --   1) seed_taste_from_games — 고른 게임들의 장르/태그로 취향 시드
 --      (set_signup_genres 패턴 미러: SECURITY DEFINER + auth.uid())
@@ -45,6 +45,11 @@ begin
     set weight = least(user_tag_preferences.weight + excluded.weight, 3.0);
 end
 $function$;
+
+-- 권한: 쓰기 RPC 라 비인증(anon) 호출 차단, authenticated 만 허용. (self-review 반영)
+-- Supabase 는 함수 생성 시 anon 에 직접 EXECUTE 를 grant 하므로 public·anon 둘 다 revoke.
+revoke execute on function public.seed_taste_from_games(bigint[]) from public, anon;
+grant  execute on function public.seed_taste_from_games(bigint[]) to authenticated, service_role;
 
 create or replace function public.list_picker_games(p_limit integer default 24)
 returns table(id bigint, name text, image text)
