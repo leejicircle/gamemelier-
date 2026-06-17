@@ -23,7 +23,8 @@ export function RecentSaveShelf({
   return (
     <section className="mt-16">
       <h2 className="mb-6 text-2xl tablet:text-3xl font-bold text-white">
-        &lsquo;{anchorName}&rsquo;을(를) 저장하셔서
+        &lsquo;<span className="text-purple2">{anchorName}</span>&rsquo;을(를)
+        저장하셔서
       </h2>
       <CardsGrid
         items={items}
