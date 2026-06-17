@@ -1,8 +1,8 @@
 -- =============================================================================
 -- v3 온보딩 게임 픽커: 취향 시드 + 픽커용 인기작 목록
--- 적용: MCP apply_migration 또는 `supabase db push` / SQL Editor.
---   (작성 시점 Supabase MCP 일시 불응 → prod 적용 후 파일명을 이력 version 에 맞출 것)
+-- 적용: 이미 prod 적용됨 (MCP, 이력 version 20260617122105). 신규 환경은 `supabase db push`.
 -- 참고: docs/personalization-plan.md 6.4(온보딩 게임 픽커)
+-- 후속(선택): seed RPC authenticated 제한(revoke from public)·list_picker_games covers 조인 — self-review.
 --
 --   1) seed_taste_from_games — 고른 게임들의 장르/태그로 취향 시드
 --      (set_signup_genres 패턴 미러: SECURITY DEFINER + auth.uid())

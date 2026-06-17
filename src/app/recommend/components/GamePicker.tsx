@@ -43,7 +43,7 @@ export function GamePicker({
   const canSubmit = count >= MIN_PICK && !submitting;
 
   async function handleConfirm() {
-    if (!canSubmit) return;
+    if (!canSubmit || !userId) return;
     setSubmitting(true);
     try {
       await seedTasteFromGames([...selected]);
@@ -74,7 +74,7 @@ export function GamePicker({
 
       <div className="grid grid-cols-2 tablet:grid-cols-3 desktop:grid-cols-4 gap-4 tablet:gap-5">
         {isLoading
-          ? Array.from({ length: 12 }).map((_, i) => (
+          ? Array.from({ length: 24 }).map((_, i) => (
               <div key={i} className="aspect-[460/215] rounded-xl overflow-hidden">
                 <Skeleton className="h-full w-full" />
               </div>
