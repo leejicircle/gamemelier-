@@ -9,9 +9,11 @@ import GuestPage from '../shared/components/GuestPage';
 import { TasteChips } from './components/TasteChips';
 import { RecentSaveShelf } from './components/RecentSaveShelf';
 import { SaleShelf } from './components/SaleShelf';
+import { GamePicker } from './components/GamePicker';
 import { useRecommendCards } from '@/lib/hooks/useRecommendCards';
 import { useSavedOnSale } from '@/lib/hooks/useSavedOnSale';
 import { useRecentSaveRecs } from '@/lib/hooks/useRecentSaveRecs';
+import { useTasteChips } from '@/lib/hooks/useTasteChips';
 import { dismissGame, undoDismissGame } from '@/lib/api/feedbackApi';
 import { logEvent, logEvents } from '@/lib/api/eventsApi';
 import type { CardItem } from '@/types';
@@ -61,6 +63,12 @@ export default function RecommendClient({
   } = useRecommendCards(ssrUserId, ssrBudgetCents, ssrLimit, ssrExcludeUpcoming);
   const { data: saleItems = [] } = useSavedOnSale(ssrUserId);
   const { data: recentSaveItems = [] } = useRecentSaveRecs(ssrUserId);
+  // 취향 칩(=user_genre_preferences)이 비면 취향 신호가 없는 신규 유저 → 온보딩 픽커 노출
+  const { data: tasteChips = [], isLoading: chipsLoading } =
+    useTasteChips(ssrUserId);
+
+  // 픽커 '건너뛰기' 시 이번 세션은 일반 추천을 보여준다.
+  const [pickerSkipped, setPickerSkipped] = useState(false);
 
   // 서버 반영을 기다리지 않고 즉시 카드를 빼기 위한 낙관적 상태.
   // 실패하면 롤백한다. (서버 추천 RPC 는 이미 dismissed 를 제외하므로
@@ -138,6 +146,16 @@ export default function RecommendClient({
       rollbackDismiss(gameId);
       console.error('dismissGame 실패:', e);
     }
+  }
+
+  // 취향 신호가 없는 신규 유저 → 추천 선반 대신 온보딩 픽커(콜드스타트 해소)
+  const showPicker = !chipsLoading && tasteChips.length === 0 && !pickerSkipped;
+  if (showPicker) {
+    return (
+      <section className="container-fluid">
+        <GamePicker userId={ssrUserId} onSkip={() => setPickerSkipped(true)} />
+      </section>
+    );
   }
 
   return (
