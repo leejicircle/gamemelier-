@@ -82,6 +82,7 @@ export type GameDetail = {
   developers: string[];
   publishers: string[];
   genres: string[];
+  tags: string[];
   categories: string[];
   platforms: string[];
 

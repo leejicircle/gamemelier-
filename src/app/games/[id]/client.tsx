@@ -73,6 +73,19 @@ export default function GameDetailClient({ id }: { id: number }) {
                 ))}
               </div>
 
+              {data.tags?.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3 w-full">
+                  {data.tags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      className="bg-purple2/15 text-purple2 border border-purple2/30 rounded-[100px] font-medium text-md"
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
               <div className="mt-[3.125rem]">
                 {data.discount_percent && data.discount_percent > 0 && (
                   <div className="text-xl font-medium text-gray-600">
