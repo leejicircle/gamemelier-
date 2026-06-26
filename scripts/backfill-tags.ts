@@ -75,28 +75,18 @@ async function fetchSteamSpyTags(appid: number): Promise<{ name: string; votes: 
   }
 }
 
-/** tags 테이블에서 이름으로 찾고 없으면 insert 후 id 반환. */
+/** tags 테이블에서 이름으로 id 확보. name 유니크라 upsert 로 race-free. */
 async function ensureTag(name: string): Promise<number | null> {
-  const { data: existing, error: selErr } = await sb
+  const { data, error } = await sb
     .from('tags')
-    .select('id')
-    .eq('name', name)
-    .maybeSingle();
-  if (selErr) {
-    console.warn(`[tags sel] ${name}: ${selErr.message}`);
-    return null;
-  }
-  if (existing) return existing.id as number;
-  const { data: inserted, error: insErr } = await sb
-    .from('tags')
-    .insert({ name })
+    .upsert({ name }, { onConflict: 'name' })
     .select('id')
     .single();
-  if (insErr) {
-    console.warn(`[tags ins] ${name}: ${insErr.message}`);
+  if (error) {
+    console.warn(`[tags upsert] ${name}: ${error.message}`);
     return null;
   }
-  return inserted ? (inserted.id as number) : null;
+  return data ? (data.id as number) : null;
 }
 
 async function main() {

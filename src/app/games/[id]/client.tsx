@@ -73,7 +73,7 @@ export default function GameDetailClient({ id }: { id: number }) {
                 ))}
               </div>
 
-              {data.tags?.length > 0 && (
+              {data.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-3 w-full">
                   {data.tags.map((tag) => (
                     <Badge
