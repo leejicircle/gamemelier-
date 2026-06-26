@@ -44,7 +44,7 @@ async function allValues(table: string, col: string): Promise<number[]> {
     const { data, error } = await sb.from(table).select(col).range(from, from + 999);
     if (error) throw new Error(`${table}.${col}: ${error.message}`);
     if (!data || data.length === 0) break;
-    out.push(...data.map((r) => (r as Record<string, number>)[col]));
+    out.push(...data.map((r) => (r as unknown as Record<string, number>)[col]));
     if (data.length < 1000) break;
   }
   return out;
