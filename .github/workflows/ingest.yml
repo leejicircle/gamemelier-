@@ -22,10 +22,16 @@
 name: Steam 데이터 적재
 
 on:
-  schedule:
-    # GitHub cron은 UTC 기준. '30 18 * * *' = 매일 18:30 UTC = 03:30 KST.
-    # (정각 :00은 GitHub 부하가 몰려 지연되기 쉬워 :30으로 둠)
-    - cron: '30 18 * * *'
+  # 일일 스케줄은 런칭(실유저 유입) 전까지 비활성화.
+  # 사유: 유저 0명이라 데이터 신선도 무가치한데, 전체 적재가 2h timeout을 넘겨
+  #       매일 취소되며 CI 분만 소모. 재활성화 전 선행 수정 필요:
+  #       ① ingest-steam의 games 조회 1000행 상한(PostgREST) 페이지네이션
+  #       ② 일일=가격만(FETCH_REVIEWS/TAGS off) + 리뷰·태그 주간 분리
+  #       ③ timeout-minutes 상향 또는 카탈로그 슬라이스
+  # 그동안은 수동(workflow_dispatch)으로만 실행.
+  # schedule:
+  #   # GitHub cron은 UTC 기준. '30 18 * * *' = 매일 18:30 UTC = 03:30 KST.
+  #   - cron: '30 18 * * *'
   workflow_dispatch: {}
 
 # 이전 실행이 안 끝났으면 새 실행을 대기시켜 동시 실행 방지.
