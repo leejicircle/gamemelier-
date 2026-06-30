@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import LogoSvg from '@/assets/Group 1229.svg';
 
 /**
@@ -14,6 +14,7 @@ import LogoSvg from '@/assets/Group 1229.svg';
  */
 export default function AppIntroLoader() {
   const [show, setShow] = useState(true);
+  const reduce = useReducedMotion();
 
   useEffect(() => {
     // 환영 문구가 읽히도록 최소 노출 후 퇴장
@@ -31,15 +32,24 @@ export default function AppIntroLoader() {
           exit={{ opacity: 0, transition: { duration: 0.5, ease: 'easeInOut' } }}
         >
           <div className="flex flex-col items-center gap-6">
-            {/* 스프링 등장 → 무한 플로트 (등장과 플로트를 중첩 분리) */}
+            {/* 스프링 등장 → 무한 플로트 (등장과 플로트를 중첩 분리).
+                reduce 시: 스케일·플로트 끄고 페이드만 */}
             <motion.div
-              initial={{ scale: 0.7, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 16 }}
+              initial={reduce ? { opacity: 0 } : { scale: 0.7, opacity: 0 }}
+              animate={reduce ? { opacity: 1 } : { scale: 1, opacity: 1 }}
+              transition={
+                reduce
+                  ? { duration: 0.4 }
+                  : { type: 'spring', stiffness: 260, damping: 16 }
+              }
             >
               <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                animate={reduce ? { y: 0 } : { y: [0, -10, 0] }}
+                transition={{
+                  duration: 1.6,
+                  repeat: reduce ? 0 : Infinity,
+                  ease: 'easeInOut',
+                }}
               >
                 <Image
                   src={LogoSvg}
@@ -54,7 +64,7 @@ export default function AppIntroLoader() {
 
             <motion.div
               className="text-center"
-              initial={{ opacity: 0, y: 12 }}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.5, ease: 'easeOut' }}
             >
