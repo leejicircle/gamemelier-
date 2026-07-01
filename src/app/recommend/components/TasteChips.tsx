@@ -41,7 +41,7 @@ export function TasteChips({ userId }: { userId?: string }) {
             <Badge
               key={chip.tag_id}
               variant="outline"
-              className="border-teal-400/40 bg-teal-400/10 text-teal-300 text-sm"
+              className="border-cyan-400/40 bg-cyan-400/10 text-cyan-300 text-sm"
             >
               {chip.name}
               <span className="ml-1 text-gray-400">
