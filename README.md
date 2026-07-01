@@ -13,8 +13,8 @@ Steam의 게임 데이터를 수집·가공하여 게임 탐색, 출시예정작
 | 🏠 **홈** | 추천/인기 게임 캐러셀 |
 | 🕹️ **전체 게임** | 장르 필터 + 페이지네이션 게임 목록 |
 | 📅 **출시예정** | Coming Soon 게임 모아보기 |
-| 🎯 **추천** | 로그인 사용자 대상 개인화 게임 추천 (예산/장르 기반) |
-| 📄 **게임 상세** | 스크린샷·영상 캐러셀, 가격, 위시리스트, 구매 링크 |
+| 🎯 **추천** | 로그인 사용자 대상 개인화 추천 (장르·태그·평판 기반, 신규 유저 온보딩 게임 픽커·취향 칩·추천 이유 배지) |
+| 📄 **게임 상세** | 스크린샷·영상 캐러셀, 장르·세부 태그, 가격, 위시리스트, 구매 링크 |
 | 👤 **마이페이지** | 저장한 게임 목록, 선호 장르 관리 |
 | 🔍 **검색** | 게임 이름 실시간 검색 |
 | 🔐 **인증** | Supabase 기반 회원가입/로그인 |
@@ -30,6 +30,7 @@ Steam의 게임 데이터를 수집·가공하여 게임 탐색, 출시예정작
 - **Server State**: [TanStack Query](https://tanstack.com/query)
 - **Client State**: [Zustand](https://zustand-demo.pmnd.rs/)
 - **Carousel**: [Embla Carousel](https://www.embla-carousel.com/)
+- **Animation**: [Framer Motion](https://motion.dev/) (`motion`) — 초기진입 인트로 스플래시
 - **Data Ingest**: Steam Web API → Supabase (`tsx` CLI 스크립트)
 
 <br/>
@@ -61,7 +62,9 @@ src/
 
 scripts/
 ├─ ingest-steam.ts           # 기존 게임 데이터 갱신 (UPDATE)
-└─ ingest-upcoming.ts        # 출시예정 게임 신규 적재 (INSERT/UPSERT)
+├─ ingest-upcoming.ts        # 출시예정 게임 신규 적재 (INSERT/UPSERT)
+├─ ingest-popular.ts         # 인기작(topsellers) 미보유 신규 lean 적재
+└─ backfill-tags.ts          # 태그 없는 게임에 SteamSpy 태그 백필 (1회성)
 ```
 
 <br/>
@@ -95,9 +98,6 @@ npm install
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-
-# Supabase Function
-NEXT_PUBLIC_FUNCTION_URL=your-supabase-function-url
 ```
 
 ### 3. 개발 서버 실행
@@ -137,6 +137,12 @@ npx tsx --env-file=.env.ingest scripts/ingest-steam.ts
 
 # 출시예정 게임 신규 적재
 npx tsx --env-file=.env.ingest scripts/ingest-upcoming.ts
+
+# 인기작 신규 적재
+npx tsx --env-file=.env.ingest scripts/ingest-popular.ts
+
+# 태그 백필 (태그 없는 게임만, SteamSpy 전용)
+npx tsx --env-file=.env.ingest scripts/backfill-tags.ts
 ```
 
 선택적 튜닝 환경 변수: `INGEST_LIMIT`, `INGEST_DELAY_MS`, `INGEST_SKIP_FRESH_HOURS`, `INGEST_MAX_CONSECUTIVE_ERRORS`, `INGEST_UPCOMING_COUNT` 등.
