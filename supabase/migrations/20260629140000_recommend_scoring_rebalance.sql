@@ -104,8 +104,9 @@ AS $function$
   reasoned as (
     select s.*,
       case
-        when s.top_genre is not null and s.genre_score >= 0.5 then 'genre'
+        -- 재균형(태그 우대)에 맞춰 이유 배지도 태그 우선. 태그 매칭 없을 때만 장르.
         when s.top_tag is not null and s.tag_score >= 0.5 then 'tag'
+        when s.top_genre is not null and s.genre_score >= 0.5 then 'genre'
         when s.discount_percent >= 10 then 'discount'
         when s.review_score_desc in ('Overwhelmingly Positive','Very Positive')
           or (s.positive_ratio is not null and s.positive_ratio >= 0.90) then 'quality'
