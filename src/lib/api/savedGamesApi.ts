@@ -59,18 +59,19 @@ export async function toggleSaved(gameId: number) {
   return { saved: true };
 }
 
-/** 특정 게임의 저장 여부. */
-export async function fetchIsSaved(gameId: number) {
+/**
+ * 현재 유저가 저장한 game_id 전체 집합.
+ * 카드마다 개별 조회(fetchIsSaved)하던 N+1 을, 페이지당 1회 조회로 대체한다.
+ */
+export async function fetchSavedGameIds(): Promise<number[]> {
   const userId = await requireUserId();
 
   const { data, error } = await supabase
     .from('user_saved_games')
     .select('game_id')
-    .eq('user_id', userId)
-    .eq('game_id', gameId)
-    .maybeSingle();
+    .eq('user_id', userId);
   if (error) throw error;
-  return { is_saved: !!data };
+  return (data ?? []).map((r) => r.game_id as number);
 }
 
 /** 저장한 게임 목록 (games 조인, 최신 저장순). */

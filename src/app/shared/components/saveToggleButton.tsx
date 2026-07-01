@@ -1,13 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Heart, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { toggleSaved, fetchIsSaved } from '@/lib/api/savedGamesApi';
+import { toggleSaved } from '@/lib/api/savedGamesApi';
 import { logEvent } from '@/lib/api/eventsApi';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useSavedGameIds } from '@/lib/hooks/useSavedGameIds';
 
 type Props = {
   className?: string;
@@ -24,35 +26,24 @@ export default function SaveToggleButton({
   onChange,
 }: Props) {
   const userId = useAuthStore((s) => s.user?.id);
+  const qc = useQueryClient();
+  // 상위 savedSet(initialSaved)이 없으면 유저의 저장 id 집합을 공유 쿼리로 조회.
+  // 모든 카드가 같은 queryKey 를 dedupe → 카드 수만큼 개별 조회하던 N+1 을 페이지당 1건으로.
+  const { data: savedIds } = useSavedGameIds(initialSaved == null);
   const [isSaved, setIsSaved] = useState<boolean | null>(initialSaved ?? null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // 상위에서 savedSet 으로 초기값을 받은 경우는 그 값을 신뢰하고 재조회하지 않는다.
     if (initialSaved != null) return;
-
-    let mounted = true;
-
-    (async () => {
-      // 비로그인: 세션이 없으면 찜 여부 조회를 건너뛰고 미저장으로 둔다.
-      // (게스트마다 카드 수만큼 인증 실패 RPC + 콘솔 에러가 쏟아지던 문제 방지)
-      if (!userId) {
-        if (mounted) setIsSaved(false);
-        return;
-      }
-      try {
-        const r = await fetchIsSaved(gameId);
-        if (mounted) setIsSaved(r.is_saved);
-      } catch (e) {
-        if (mounted) setIsSaved(false);
-        console.error('fetchIsSaved 실패:', e);
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [gameId, userId, initialSaved]);
+    // 비로그인: 조회 건너뛰고 미저장으로 둔다(공유 쿼리도 enabled=false).
+    if (!userId) {
+      setIsSaved(false);
+      return;
+    }
+    // 공유 집합이 로드되면 그 값으로 저장 여부 반영.
+    if (savedIds) setIsSaved(savedIds.has(gameId));
+  }, [gameId, userId, initialSaved, savedIds]);
 
   async function onClick(e: React.MouseEvent) {
     e.stopPropagation();
@@ -67,6 +58,13 @@ export default function SaveToggleButton({
       const { saved } = await toggleSaved(gameId);
       setIsSaved(saved);
       onChange?.(saved);
+      // 공유 집합 캐시 동기화 → 리페치 없이 다른 카드/뷰의 저장 표시 일관성 유지.
+      qc.setQueryData<Set<number>>(['saved-game-ids', userId], (prev) => {
+        const next = new Set(prev ?? []);
+        if (saved) next.add(gameId);
+        else next.delete(gameId);
+        return next;
+      });
       void logEvent({
         game_id: gameId,
         event_type: saved ? 'save' : 'unsave',

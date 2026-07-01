@@ -14,9 +14,14 @@ import LogoSvg from '@/assets/Group 1229.svg';
  */
 export default function AppIntroLoader() {
   const [show, setShow] = useState(true);
+  // 애니메이션 자식(왕관·문구)은 마운트 후에만 렌더한다. Framer Motion 의 initial
+  // (scale/opacity/y)이 SSR HTML 에 인라인 transform 을 심어 클라 하이드레이션과 어긋나는
+  // 미스매치를 방지(다크 오버레이는 SSR 로 떠서 첫 백지는 그대로 가림).
+  const [mounted, setMounted] = useState(false);
   const reduce = useReducedMotion();
 
   useEffect(() => {
+    setMounted(true);
     // 환영 문구가 읽히도록 최소 노출 후 퇴장
     const t = setTimeout(() => setShow(false), 1400);
     return () => clearTimeout(t);
@@ -31,6 +36,7 @@ export default function AppIntroLoader() {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.5, ease: 'easeInOut' } }}
         >
+          {mounted && (
           <div className="flex flex-col items-center gap-6">
             {/* 스프링 등장 → 무한 플로트 (등장과 플로트를 중첩 분리).
                 reduce 시: 스케일·플로트 끄고 페이드만 */}
@@ -76,6 +82,7 @@ export default function AppIntroLoader() {
               </p>
             </motion.div>
           </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>
