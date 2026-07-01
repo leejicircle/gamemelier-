@@ -78,7 +78,7 @@ export default function GameDetailClient({ id }: { id: number }) {
                   {data.tags.map((tag) => (
                     <Badge
                       key={tag}
-                      className="bg-teal-400/10 text-teal-300 border border-teal-400/40 rounded-[100px] font-medium text-md"
+                      className="bg-cyan-400/10 text-cyan-300 border border-cyan-400/40 rounded-[100px] font-medium text-md"
                     >
                       {tag}
                     </Badge>
