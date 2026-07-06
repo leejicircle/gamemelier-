@@ -2,7 +2,6 @@
 
 import { useActionState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { loginAction } from './actions';
 import SubmitButton from './components/SubmitButton';
 import { useState } from 'react';
@@ -10,15 +9,16 @@ import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const [state, formAction] = useActionState(loginAction, { error: '' });
-  const router = useRouter();
   const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     if (state.success) {
       setRedirecting(true);
-      router.push('/');
+      // 서버 액션 로그인은 쿠키만 갱신하므로 소프트 내비게이션(router.push)으로는
+      // 브라우저 supabase 클라이언트가 세션을 감지 못함 → 풀 로드로 INITIAL_SESSION 발화
+      window.location.replace('/');
     }
-  }, [state, router]);
+  }, [state]);
 
   return (
     <div
