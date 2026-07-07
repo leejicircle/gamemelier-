@@ -1,5 +1,9 @@
 import type { Metadata } from 'next';
 
+// 폰트: 2MB 단일 변수 woff2(next/font preload) → 동적 서브셋(unicode-range, 사용 글리프만
+// 5~50KB 조각 로드). 2MB High-priority 요청이 Lighthouse 시뮬레이션 LCP 그래프에 포함되면
+// +10초라 점수가 90↔67로 널뛰던 원인. 실사용 폰트 스왑도 빨라짐.
+import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 import './globals.css';
 import ClientAuthStatus from '@/components/auth/ClientAuthStatus';
 
@@ -8,7 +12,6 @@ import { Footer } from './shared/Footer';
 import Nav from './shared/Nav';
 import AppIntroLoader from './shared/components/AppIntroLoader';
 import { Toaster } from '@/components/ui/sonner';
-import { pretendard } from './font';
 
 export const metadata: Metadata = {
   title: 'GameMelier',
@@ -22,7 +25,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ko" className={`${pretendard.variable}`}>
+    <html lang="ko">
       <body>
         <AppIntroLoader />
         <div className="min-h-screen flex flex-col">
