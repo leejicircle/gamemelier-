@@ -93,12 +93,22 @@ export default function MainPage() {
 
   return (
     <section>
+      {/* unoptimized Image 는 priority 를 줘도 Next 가 head preload 를 안 심는다
+          → React Float 로 <link> 를 직접 렌더(head 호이스팅). hero(LCP)가 가장 먼저
+          대역폭을 잡아야 관측 LCP 페인트가 앞당겨지고 시뮬레이션 LCP 그래프도 좁아진다. */}
+      <link
+        rel="preload"
+        as="image"
+        href={bgImage.src}
+        fetchPriority="high"
+      />
       <div className="absolute top-0 left-0 -z-2 h-[280px] tablet:h-[380px] desktop:h-[445px] w-full">
         <Image
           src={bgImage}
           alt="hero image"
           fill
           priority
+          fetchPriority="high"
           unoptimized
           className="opacity-30 object-cover"
         />

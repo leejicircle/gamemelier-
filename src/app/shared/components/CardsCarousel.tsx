@@ -103,7 +103,7 @@ export function CardsCarousel({
                     </Card>
                   </CarouselItem>
                 ))
-              : items.map((game, i) => (
+              : items.map((game) => (
                   <CarouselItem key={game.id} className="basis-auto">
                     <Card
                       className="flex flex-col gap-2 w-[calc(100vw-32px)] tablet:w-[360px] desktop:w-[460px]"
@@ -118,7 +118,6 @@ export function CardsCarousel({
                                 sizes="(max-width: 767px) calc(100vw - 32px), (max-width: 1439px) 360px, 460px"
                                 src={game.image}
                                 alt={game.name}
-                                priority={i === 0}
                                 className="object-cover rounded-xl"
                               />
                             </div>
