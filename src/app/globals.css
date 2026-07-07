@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: var(--font-pretendard), ui-sans-serif, system-ui;
+  --font-sans: 'Pretendard Variable', Pretendard, ui-sans-serif, system-ui;
 }
 :root {
   --foreground: white;
