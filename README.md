@@ -21,6 +21,32 @@ Steam의 게임 데이터를 수집·가공하여 게임 탐색, 출시예정작
 
 <br/>
 
+## 📸 화면
+
+### 🏠 홈
+
+<img src="docs/screenshots/home-desktop.webp" width="100%" alt="홈 - 인기 게임 TOP / 출시예정 캐러셀" />
+
+### 🎯 추천 (개인화)
+
+취향 칩 · 세부 태그 · 추천 이유 배지 · "저장하셔서" 선반 · 찜 세일 선반
+
+<img src="docs/screenshots/recommend-desktop.webp" width="100%" alt="추천 - 개인화 추천 선반" />
+
+### 📄 게임 상세
+
+<img src="docs/screenshots/detail-desktop.webp" width="100%" alt="게임 상세 - 스크린샷·장르·가격" />
+
+### 📱 모바일
+
+<p>
+  <img src="docs/screenshots/home-mobile.webp" width="30%" alt="홈 (모바일)" />
+  <img src="docs/screenshots/recommend-mobile.webp" width="30%" alt="추천 (모바일)" />
+  <img src="docs/screenshots/detail-mobile.webp" width="30%" alt="게임 상세 (모바일)" />
+</p>
+
+<br/>
+
 ## 🛠 기술 스택
 
 - **Framework**: [Next.js 16](https://nextjs.org/) (App Router, React 19.2, Turbopack)
