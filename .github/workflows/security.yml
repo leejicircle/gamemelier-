@@ -30,8 +30,9 @@ permissions:
   contents: read
 
 jobs:
-  # 의존성 알려진 취약점. moderate 는 보고만 하고 high 이상이면 실패시킨다.
-  # (현재 moderate 2건은 블로킹하지 않음 — 필요 시 --audit-level=moderate 로 강화)
+  # 의존성 알려진 취약점. 배포 번들에 포함되는 프로덕션 의존성만(--omit=dev) high 이상이면 실패.
+  # devDependencies(eslint 등 빌드·린트 툴)의 취약점은 배포물에 실리지 않아 게이트에서 제외한다.
+  # 예: brace-expansion ReDoS 는 eslint 전용 → 프로덕션 무관. dev 취약점은 로컬 `npm audit` 로 수동 점검.
   audit:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -42,7 +43,7 @@ jobs:
           node-version: 22
           cache: npm
       - name: 의존성 취약점 검사
-        run: npm audit --audit-level=high
+        run: npm audit --omit=dev --audit-level=high
 
   # 커밋/히스토리 시크릿 노출 탐지.
   secrets:
