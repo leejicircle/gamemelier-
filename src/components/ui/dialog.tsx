@@ -38,7 +38,9 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
+        // black/50 은 이 앱처럼 페이지 자체가 거의 검을 때 뒤 화면이 그대로 비쳐
+        // 모달이 떠 보이지 않는다. 70% 로 올려 배경과 확실히 분리한다.
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/70",
         className
       )}
       {...props}

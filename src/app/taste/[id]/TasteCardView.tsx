@@ -19,7 +19,9 @@ export function TasteCardView({
   const title = tasteTitle(card.genres[0]?.name);
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-gray-800 bg-gray-950">
+    // 테두리가 gray-800 이면 어두운 배경(팝업 오버레이·다크 페이지)에 묻혀 카드 경계가 사라진다.
+    // 배경색이 뭐가 오든 뜨는 white/15 + 그림자로 "떠 있는 표면"을 만든다.
+    <div className="relative overflow-hidden rounded-xl border border-white/15 bg-gray-950 shadow-2xl">
       {card.gameImage && (
         <>
           <Image
@@ -31,7 +33,7 @@ export function TasteCardView({
           />
           {/* 게임 아트마다 밝기가 달라 고정 오버레이 하나로는 위험 — 어떤 아트가 와도
               흰 글씨가 읽히도록 세로 그라디언트로 깐다. */}
-          <div className="absolute inset-0 bg-gradient-to-b from-gray-950/85 via-gray-950/70 to-gray-950/50" />
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-950/92 via-gray-950/88 to-gray-950/76" />
         </>
       )}
 

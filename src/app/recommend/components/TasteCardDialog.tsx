@@ -29,8 +29,9 @@ export function TasteCardDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* 카드가 자체 테두리·배경을 갖고 있어 다이얼로그 크롬은 지운다(이중 테두리 방지) */}
-      <DialogContent className="border-0 bg-transparent p-0 shadow-none sm:max-w-md">
+      {/* 카드가 자체 테두리·배경·그림자를 갖고 있어 다이얼로그 크롬은 지운다(이중 테두리 방지).
+          닫기 X 는 카드 아트 위에 얹히므로 흰색으로 고정해 어떤 아트에서도 보이게 한다. */}
+      <DialogContent className="border-0 bg-transparent p-0 shadow-none sm:max-w-md [&>[data-slot=dialog-close]]:top-5 [&>[data-slot=dialog-close]]:right-5 [&>[data-slot=dialog-close]]:text-white [&>[data-slot=dialog-close]]:opacity-80">
         <DialogHeader className="sr-only">
           <DialogTitle>내 취향 카드</DialogTitle>
           <DialogDescription>
