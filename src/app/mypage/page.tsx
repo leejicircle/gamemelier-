@@ -10,5 +10,5 @@ export default async function MyPagePage() {
 
   if (!user) return <GuestPage />;
 
-  return <MyPageClient />;
+  return <MyPageClient userId={user.id} />;
 }
