@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -27,6 +28,7 @@ export function GamePicker({
   onSkip: () => void;
 }) {
   const qc = useQueryClient();
+  const router = useRouter();
   const { data: games = [], isLoading } = usePickerGames();
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [submitting, setSubmitting] = useState(false);
@@ -53,7 +55,14 @@ export function GamePicker({
         qc.invalidateQueries({ queryKey: ['recommend-cards', userId] }),
         qc.invalidateQueries({ queryKey: ['recent-save-recs', userId] }),
       ]);
-      toast('취향을 반영했어요! 맞춤 추천을 만들었어요.');
+      // 취향이 처음 생기는 순간 = 카드가 처음 만들어지는 순간. 추천 선반으로 넘어가는
+      // 흐름은 그대로 두고 토스트 버튼으로만 알린다(갓 만든 추천을 가리지 않도록).
+      toast('취향을 반영했어요! 맞춤 추천을 만들었어요.', {
+        action: {
+          label: '내 취향 카드 보기',
+          onClick: () => router.push(`/taste/${userId}`),
+        },
+      });
     } catch (e) {
       console.error('seedTasteFromGames 실패:', e);
       toast('취향 저장에 실패했어요. 다시 시도해 주세요.');

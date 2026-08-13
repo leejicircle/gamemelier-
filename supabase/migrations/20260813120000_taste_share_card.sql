@@ -17,27 +17,17 @@ stable
 security definer
 set search_path to 'public'
 as $function$
+  -- 정의를 get_taste_chips 와 일부러 똑같이 맞춘다(같은 화면에 나란히 놓이는데
+  -- 1위 장르나 비중이 다르면 사용자에겐 그냥 틀린 숫자로 보인다).
+  -- 그래서 가입 장르(profiles.favorite_genres)는 섞지 않고 행동 취향만 쓴다.
   with genre_pref as (
-    -- 행동으로 쌓인 취향
     select g.name, ugp.weight
     from public.user_genre_preferences ugp
     join public.genres g on g.id = ugp.genre_id
     where ugp.user_id = p_user and ugp.weight > 0
-    union all
-    -- 가입 시 고른 장르(행동 신호가 아직 없는 유저도 카드가 비지 않게) —
-    -- recommend_games_cards 의 fav_genre 패턴과 동일
-    select g.name, 1.0
-    from public.profiles pf
-    join lateral unnest(coalesce(pf.favorite_genres, '{}')) fn(name) on true
-    join public.genres g on lower(g.name) = lower(fn.name)
-    where pf.id = p_user
-  ),
-  genre_sum as (
-    -- 두 출처에 같은 장르가 있으면 합산(중복 칩 방지)
-    select name, sum(weight) as weight from genre_pref group by name
   ),
   genre_top as (
-    select name, weight from genre_sum order by weight desc, name limit 3
+    select name, weight from genre_pref order by weight desc, name limit 3
   ),
   tag_top as (
     select t.name, utp.weight
@@ -62,7 +52,7 @@ as $function$
     (select jsonb_agg(
        jsonb_build_object(
          'name', gt.name,
-         'share', round((gt.weight / nullif((select sum(weight) from genre_sum), 0))::numeric, 4)
+         'share', round((gt.weight / nullif((select sum(weight) from genre_pref), 0))::numeric, 4)
        ) order by gt.weight desc, gt.name)
      from genre_top gt),
     (select jsonb_agg(tt.name order by tt.weight desc, tt.name) from tag_top tt),
