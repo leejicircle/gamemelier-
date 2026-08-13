@@ -40,7 +40,7 @@ export default function ShareActions({
     <div className="flex gap-2">
       <button
         onClick={share}
-        className="bg-purple hover:bg-purple2 flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-sm text-white transition-colors"
+        className="bg-purple hover:bg-purple2 flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg py-2.5 text-sm text-white transition-colors"
       >
         <Share2 size={16} />
         공유하기
