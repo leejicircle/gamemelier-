@@ -1,8 +1,7 @@
 import Image from 'next/image';
 import { Crown } from 'lucide-react';
 
-import type { TasteCard } from '@/lib/tasteCard';
-import { tasteTitle } from '@/lib/tasteCard';
+import { tasteTitle, type TasteCard } from '@/lib/tasteLabel';
 import ShareActions from './ShareActions';
 
 /**
@@ -19,11 +18,13 @@ export function TasteCardView({
   const title = tasteTitle(card.genres[0]?.name);
 
   return (
-    // 테두리가 gray-800 이면 어두운 배경(팝업 오버레이·다크 페이지)에 묻혀 카드 경계가 사라진다.
-    // 배경색이 뭐가 오든 뜨는 white/15 + 그림자로 "떠 있는 표면"을 만든다.
-    <div className="relative overflow-hidden rounded-xl border border-white/15 bg-gray-950 shadow-2xl">
+    // 면이 페이지(gray-950)보다 한 단계 밝아 카드가 선이 아니라 면으로 구분된다.
+    <div className="overflow-hidden rounded-xl border border-white/15 bg-gray-900">
+      {/* 아트는 상단 밴드로만 둔다. 풀블리드로 깔면 글자 밑에 어떤 밝기의 아트가 올지
+          모르는 채로 스크림 하나에 기대야 하는데(1,800개 카탈로그), 밴드는 글자가
+          아트 위에 아예 안 올라가서 그 문제 자체가 없어진다. */}
       {card.gameImage && (
-        <>
+        <div className="relative h-36 w-full">
           <Image
             src={card.gameImage}
             alt=""
@@ -31,13 +32,10 @@ export function TasteCardView({
             sizes="448px"
             className="object-cover"
           />
-          {/* 게임 아트마다 밝기가 달라 고정 오버레이 하나로는 위험 — 어떤 아트가 와도
-              흰 글씨가 읽히도록 세로 그라디언트로 깐다. */}
-          <div className="absolute inset-0 bg-gradient-to-b from-gray-950/92 via-gray-950/88 to-gray-950/76" />
-        </>
+        </div>
       )}
 
-      <div className="relative p-6">
+      <div className="p-6">
         <div className="mb-5 flex items-center gap-1.5">
           <Crown size={16} className="text-purple2" />
           <span className="text-xs text-gray-400">겜믈리에 취향 리포트</span>
@@ -54,7 +52,9 @@ export function TasteCardView({
               {title}
             </h2>
             {card.gameName && (
-              <p className="mb-5 text-xs text-gray-400">{card.gameName}</p>
+              <p className="mb-5 text-xs text-gray-400">
+                최근 저장 · {card.gameName}
+              </p>
             )}
 
             <div className="mb-5 flex flex-col gap-2.5">

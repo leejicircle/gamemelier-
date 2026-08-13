@@ -1,7 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ImageResponse } from 'next/og';
-import { fetchTasteCard, tasteTitle } from '@/lib/tasteCard';
+import { fetchTasteCard } from '@/lib/tasteCard';
+import { tasteTitle } from '@/lib/tasteLabel';
 
 export const alt = '겜믈리에 취향 리포트';
 export const size = { width: 1200, height: 630 };

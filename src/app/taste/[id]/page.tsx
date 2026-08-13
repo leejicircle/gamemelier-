@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { fetchTasteCard, tasteTitle } from '@/lib/tasteCard';
+import { fetchTasteCard } from '@/lib/tasteCard';
+import { tasteTitle } from '@/lib/tasteLabel';
 import { TasteCardView } from './TasteCardView';
 
 export async function generateMetadata(props: {

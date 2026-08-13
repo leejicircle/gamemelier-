@@ -11,6 +11,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useTasteCard } from '@/lib/hooks/useTasteCard';
 import { TasteCardView } from '@/app/taste/[id]/TasteCardView';
 
+// 닫기 X 는 카드 상단 아트 위에 얹힌다. 게임마다 아트 밝기가 달라 흰색만으론
+// 밝은 아트에서 사라지므로, 어두운 원형 배경을 깔아 어떤 아트에서도 보이게 한다.
+const CLOSE_BTN = [
+  '[&>[data-slot=dialog-close]]:top-4',
+  '[&>[data-slot=dialog-close]]:right-4',
+  '[&>[data-slot=dialog-close]]:cursor-pointer',
+  '[&>[data-slot=dialog-close]]:rounded-full',
+  '[&>[data-slot=dialog-close]]:bg-black/60',
+  '[&>[data-slot=dialog-close]]:p-1.5',
+  '[&>[data-slot=dialog-close]]:text-white',
+  '[&>[data-slot=dialog-close]]:opacity-100',
+].join(' ');
+
 /**
  * 취향 카드 팝업 — 추천 탭에서 카드를 보려고 페이지를 떠나지 않게.
  * `/taste/[id]` 라우트는 그대로 남는다(공유 링크와 OG 이미지가 그 URL 을 쓴다).
@@ -29,9 +42,8 @@ export function TasteCardDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* 카드가 자체 테두리·배경·그림자를 갖고 있어 다이얼로그 크롬은 지운다(이중 테두리 방지).
-          닫기 X 는 카드 아트 위에 얹히므로 흰색으로 고정해 어떤 아트에서도 보이게 한다. */}
-      <DialogContent className="border-0 bg-transparent p-0 shadow-none sm:max-w-md [&>[data-slot=dialog-close]]:top-5 [&>[data-slot=dialog-close]]:right-5 [&>[data-slot=dialog-close]]:cursor-pointer [&>[data-slot=dialog-close]]:text-white [&>[data-slot=dialog-close]]:opacity-80">
+      {/* 카드가 자체 테두리·배경을 갖고 있어 다이얼로그 크롬은 지운다(이중 테두리 방지). */}
+      <DialogContent className={`border-0 bg-transparent p-0 shadow-none sm:max-w-md ${CLOSE_BTN}`}>
         <DialogHeader className="sr-only">
           <DialogTitle>내 취향 카드</DialogTitle>
           <DialogDescription>

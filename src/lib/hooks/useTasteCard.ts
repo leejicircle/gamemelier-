@@ -1,7 +1,7 @@
 'use client';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
-import type { TasteCard } from '@/lib/tasteCard';
+import type { TasteCard } from '@/lib/tasteLabel';
 
 /**
  * 취향 카드 데이터(클라이언트). 팝업에서 쓴다 — 라우트 페이지는 서버에서
