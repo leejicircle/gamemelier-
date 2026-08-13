@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { Crown } from 'lucide-react';
 
-import { tasteSubject, tasteTitle, type TasteCard } from '@/lib/tasteLabel';
+import { tasteTitle, type TasteCard } from '@/lib/tasteLabel';
 import ShareActions from './ShareActions';
 
 /**
@@ -63,8 +63,18 @@ export function TasteCardView({
           </p>
         ) : (
           <>
+            {/* 닉네임 강조는 CardsGrid 제목("test6님을 위한 추천 게임")과 같은 처리 */}
             <p className="mb-1 text-sm text-gray-400">
-              {tasteSubject(card.nickname)}
+              {card.nickname ? (
+                <>
+                  <span className="text-purple2 font-bold">
+                    {card.nickname}
+                  </span>
+                  님은
+                </>
+              ) : (
+                '당신은'
+              )}
             </p>
             <h2 className="mb-1.5 text-2xl leading-snug font-medium text-white">
               {title}

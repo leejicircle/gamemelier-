@@ -9,11 +9,6 @@ export type TasteCard = {
   nickname: string | null;
 };
 
-/** 카드 첫 줄. 닉네임이 없으면 "당신은"으로 떨어진다. */
-export function tasteSubject(nickname?: string | null): string {
-  return nickname ? `${nickname}님은` : '당신은';
-}
-
 export const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
