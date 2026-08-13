@@ -10,6 +10,7 @@ import { TasteChips } from './components/TasteChips';
 import { RecentSaveShelf } from './components/RecentSaveShelf';
 import { SaleShelf } from './components/SaleShelf';
 import { GamePicker } from './components/GamePicker';
+import { TasteCardDialog } from './components/TasteCardDialog';
 import { useRecommendCards } from '@/lib/hooks/useRecommendCards';
 import { useSavedOnSale } from '@/lib/hooks/useSavedOnSale';
 import { useRecentSaveRecs } from '@/lib/hooks/useRecentSaveRecs';
@@ -69,6 +70,10 @@ export default function RecommendClient({
 
   // 픽커 '건너뛰기' 시 이번 세션은 일반 추천을 보여준다.
   const [pickerSkipped, setPickerSkipped] = useState(false);
+
+  // 취향 카드 팝업. 픽커 완료 토스트와 취향 칩 양쪽에서 여는데, 픽커는 시드 직후
+  // 언마운트되므로 상태는 계속 살아 있는 여기(부모)가 들고 있어야 한다.
+  const [cardOpen, setCardOpen] = useState(false);
 
   // 서버 반영을 기다리지 않고 즉시 카드를 빼기 위한 낙관적 상태.
   // 실패하면 롤백한다. (서버 추천 RPC 는 이미 dismissed 를 제외하므로
@@ -153,14 +158,25 @@ export default function RecommendClient({
   if (showPicker) {
     return (
       <section className="container-fluid">
-        <GamePicker userId={ssrUserId} onSkip={() => setPickerSkipped(true)} />
+        <GamePicker
+          userId={ssrUserId}
+          onSkip={() => setPickerSkipped(true)}
+          onShowCard={() => setCardOpen(true)}
+        />
       </section>
     );
   }
+  // 팝업은 아래 본 화면에만 둔다 — handleConfirm 이 invalidate 를 await 한 뒤
+  // 토스트를 띄우므로, 버튼이 보일 시점엔 이미 픽커가 아니라 이 화면이다.
 
   return (
     <section className="container-fluid">
-      <TasteChips userId={ssrUserId} />
+      <TasteChips userId={ssrUserId} onShowCard={() => setCardOpen(true)} />
+      <TasteCardDialog
+        userId={ssrUserId}
+        open={cardOpen}
+        onOpenChange={setCardOpen}
+      />
 
       <CardsGrid
         title={ssrNickname ? '님을 위한 추천 게임' : '개인 맞춤 추천'}

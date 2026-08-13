@@ -1,5 +1,7 @@
 'use client';
 
+import { Crown } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
 import { useTasteChips } from '@/lib/hooks/useTasteChips';
 import { useTasteTagChips } from '@/lib/hooks/useTasteTagChips';
@@ -9,7 +11,13 @@ import { useTasteTagChips } from '@/lib/hooks/useTasteTagChips';
  * 장르(큰 바구니) 한 줄 + 세부 태그(세밀한 신호) 한 줄. "왜 이런 추천이 나오는지"
  * 설명 장치. 각 줄은 해당 취향이 없으면 숨김.
  */
-export function TasteChips({ userId }: { userId?: string }) {
+export function TasteChips({
+  userId,
+  onShowCard,
+}: {
+  userId?: string;
+  onShowCard?: () => void;
+}) {
   const { data: genres = [] } = useTasteChips(userId);
   const { data: tags = [] } = useTasteTagChips(userId);
 
@@ -50,6 +58,17 @@ export function TasteChips({ userId }: { userId?: string }) {
             </Badge>
           ))}
         </div>
+      )}
+      {/* 공유 카드 상시 진입점 — 픽커는 취향이 빈 신규 유저에게 1회만 뜨므로
+          재방문 유저가 카드를 다시 찾아올 곳이 필요하다. */}
+      {userId && onShowCard && (
+        <button
+          type="button"
+          onClick={onShowCard}
+          className="text-purple2 hover:text-purple2/80 mt-1 flex w-fit cursor-pointer items-center gap-1 text-sm transition-colors"
+        >
+          <Crown size={14} />내 취향 카드 보기
+        </button>
       )}
     </div>
   );
