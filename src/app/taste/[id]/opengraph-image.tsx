@@ -14,9 +14,14 @@ export const contentType = 'image/png';
 // 경로 문자열로 바꿔서 fetch 가 깨진다. public/ 은 배포에 항상 포함되고 readFile 로 읽힌다.
 let fontCache: Promise<Buffer> | null = null;
 function loadFont() {
+  // 실패한 Promise 를 그대로 캐시에 두면 `??=` 가 재할당을 안 해서 그 인스턴스의
+  // OG 이미지가 영구히 죽는다 — 실패 시 캐시를 비워 다음 요청이 재시도하게 한다.
   fontCache ??= readFile(
     join(process.cwd(), 'public/fonts/Pretendard-Medium.otf'),
-  );
+  ).catch((e) => {
+    fontCache = null;
+    throw e;
+  });
   return fontCache;
 }
 

@@ -11,15 +11,14 @@ export function useTasteCard(userId?: string, enabled = true) {
   return useQuery({
     queryKey: ['taste-card', userId],
     enabled: !!userId && enabled,
-    queryFn: async (): Promise<TasteCard | null> => {
+    queryFn: async (): Promise<TasteCard> => {
       const { data, error } = await supabase
         .rpc('get_taste_card', { p_user: userId })
         .single();
 
-      if (error) {
-        console.error('get_taste_card 실패:', error.message);
-        return null;
-      }
+      // 삼키고 null 을 돌려주면 쿼리가 "성공했는데 데이터 없음"이 되어
+      // 팝업이 스켈레톤에 영구히 갇힌다. 던져서 isError 로 드러낸다.
+      if (error) throw new Error(error.message);
 
       const row = data as {
         genres: { name: string; share: number }[] | null;

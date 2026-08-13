@@ -38,7 +38,7 @@ export function TasteCardDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   // 열었을 때만 조회한다 — 추천 탭 진입마다 부를 이유가 없다.
-  const { data: card, isLoading } = useTasteCard(userId, open);
+  const { data: card, isLoading, isError } = useTasteCard(userId, open);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -51,7 +51,13 @@ export function TasteCardDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {isLoading || !card || !userId ? (
+        {isError ? (
+          <div className="rounded-xl border border-white/15 bg-gray-900 p-6">
+            <p className="text-sm text-gray-300">
+              카드를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.
+            </p>
+          </div>
+        ) : isLoading || !card || !userId ? (
           <div className="p-6">
             <Skeleton className="h-64 w-full rounded-xl" />
           </div>
