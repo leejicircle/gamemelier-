@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ImageResponse } from 'next/og';
-import { fetchTasteCard } from '@/lib/tasteCard';
+import { fetchTasteCardAsViewer } from '@/lib/tasteCard';
 import { tasteTitle } from '@/lib/tasteLabel';
 
 export const alt = '겜믈리에 취향 리포트';
@@ -29,7 +29,8 @@ export default async function Image(props: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await props.params;
-  const card = await fetchTasteCard(id);
+  // 본인이 "이미지 저장"으로 직접 받을 땐 쿠키가 실려 오므로 공유 전에도 자기 카드가 나온다.
+  const { card } = await fetchTasteCardAsViewer(id);
   const title = tasteTitle(card?.genres[0]?.name);
   const genres = card?.genres ?? [];
   const tags = card?.tags ?? [];

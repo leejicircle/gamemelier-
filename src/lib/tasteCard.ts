@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 import { UUID_RE, type TasteCard } from './tasteLabel';
 
 /**
@@ -50,5 +51,28 @@ export async function fetchTasteCard(
     gameImage: row.game_image,
     visible: row.visible ?? false,
     nickname: row.nickname,
+  };
+}
+
+/**
+ * 보는 사람 기준으로 카드를 가져온다.
+ *
+ * 본인이면 세션 클라이언트로 조회해야 한다 — anon 으로 부르면 서버에 auth.uid() 가
+ * 없어서 공유 전 자기 카드가 비공개로 나온다. OG 이미지에서도 이게 필요하다:
+ * 본인이 "이미지 저장"을 누르면 브라우저가 쿠키를 실어 보내므로 자기 카드가 나오고,
+ * 쿠키 없는 크롤러는 공유한 카드만 받는다.
+ */
+export async function fetchTasteCardAsViewer(
+  userId: string,
+): Promise<{ card: TasteCard | null; isOwner: boolean }> {
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isOwner = user?.id === userId;
+
+  return {
+    card: await fetchTasteCard(userId, isOwner ? supabase : undefined),
+    isOwner,
   };
 }

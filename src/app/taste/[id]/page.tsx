@@ -1,8 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { createClient } from '@/lib/supabase/server';
-import { fetchTasteCard } from '@/lib/tasteCard';
+import { fetchTasteCardAsViewer } from '@/lib/tasteCard';
 import { tasteTitle } from '@/lib/tasteLabel';
 import { TasteCardView } from './TasteCardView';
 
@@ -10,7 +9,7 @@ export async function generateMetadata(props: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await props.params;
-  const card = await fetchTasteCard(id);
+  const { card } = await fetchTasteCardAsViewer(id);
   const title = tasteTitle(card?.genres[0]?.name);
 
   return {
@@ -25,16 +24,8 @@ export default async function TasteCardPage(props: {
   const { id } = await props.params;
 
   // 남의 카드를 보다가 공유를 누르면 호출자 본인 카드가 공개돼버린다 —
-  // 공유 버튼은 본인일 때만 띄운다.
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const isOwner = user?.id === id;
-
-  // 본인이면 세션 클라이언트로 — anon 으로 부르면 auth.uid() 가 없어 공유 전
-  // 자기 카드가 "비공개"로 나온다.
-  const card = await fetchTasteCard(id, isOwner ? supabase : undefined);
+  // 공유 버튼은 본인일 때만 띄운다(isOwner).
+  const { card, isOwner } = await fetchTasteCardAsViewer(id);
   if (!card) notFound();
 
   return (
