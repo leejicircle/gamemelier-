@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { Crown } from 'lucide-react';
 
-import { tasteTitle, type TasteCard } from '@/lib/tasteLabel';
+import { tasteSubject, tasteTitle, type TasteCard } from '@/lib/tasteLabel';
 import ShareActions from './ShareActions';
 
 /**
@@ -11,11 +11,27 @@ import ShareActions from './ShareActions';
 export function TasteCardView({
   card,
   userId,
+  isOwner = false,
 }: {
   card: TasteCard;
   userId: string;
+  /** 본인 카드인지. 공유 버튼 노출·공개 전환은 본인일 때만. */
+  isOwner?: boolean;
 }) {
   const title = tasteTitle(card.genres[0]?.name);
+
+  // 공유하지 않은 남의 카드 — 서버가 내용을 주지 않는다.
+  if (!card.visible) {
+    return (
+      <div className="overflow-hidden rounded-xl border border-white/15 bg-gray-900 p-6">
+        <div className="mb-3 flex items-center gap-1.5">
+          <Crown size={16} className="text-purple2" />
+          <span className="text-xs text-gray-400">겜믈리에 취향 리포트</span>
+        </div>
+        <p className="text-sm text-gray-300">비공개 카드예요.</p>
+      </div>
+    );
+  }
 
   return (
     // 면이 페이지(gray-950)보다 한 단계 밝아 카드가 선이 아니라 면으로 구분된다.
@@ -47,7 +63,9 @@ export function TasteCardView({
           </p>
         ) : (
           <>
-            <p className="mb-1 text-sm text-gray-400">당신은</p>
+            <p className="mb-1 text-sm text-gray-400">
+              {tasteSubject(card.nickname)}
+            </p>
             <h2 className="mb-1.5 text-2xl leading-snug font-medium text-white">
               {title}
             </h2>
@@ -91,7 +109,7 @@ export function TasteCardView({
           </>
         )}
 
-        <ShareActions title={title} userId={userId} />
+        {isOwner && <ShareActions title={title} userId={userId} />}
       </div>
     </div>
   );

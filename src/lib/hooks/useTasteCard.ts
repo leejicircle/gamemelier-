@@ -26,6 +26,8 @@ export function useTasteCard(userId?: string, enabled = true) {
         tags: string[] | null;
         game_name: string | null;
         game_image: string | null;
+        visible: boolean | null;
+        nickname: string | null;
       };
 
       return {
@@ -33,6 +35,8 @@ export function useTasteCard(userId?: string, enabled = true) {
         tags: row.tags ?? [],
         gameName: row.game_name,
         gameImage: row.game_image,
+        visible: row.visible ?? false,
+        nickname: row.nickname,
       };
     },
     staleTime: 60_000,

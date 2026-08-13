@@ -56,7 +56,8 @@ export function TasteCardDialog({
             <Skeleton className="h-64 w-full rounded-xl" />
           </div>
         ) : (
-          <TasteCardView card={card} userId={userId} />
+          // 이 팝업은 본인 추천 탭에서만 열린다 — 항상 본인 카드.
+          <TasteCardView card={card} userId={userId} isOwner />
         )}
       </DialogContent>
     </Dialog>

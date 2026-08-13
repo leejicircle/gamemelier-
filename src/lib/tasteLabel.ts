@@ -3,7 +3,16 @@ export type TasteCard = {
   tags: string[];
   gameName: string | null;
   gameImage: string | null;
+  /** 공유했거나 본인일 때만 true. false 면 서버가 내용을 아예 안 준다. */
+  visible: boolean;
+  /** 카드 주인 닉네임. 공유 링크로 보는 사람에겐 "당신은"이 틀린 말이라 필요하다. */
+  nickname: string | null;
 };
+
+/** 카드 첫 줄. 닉네임이 없으면 "당신은"으로 떨어진다. */
+export function tasteSubject(nickname?: string | null): string {
+  return nickname ? `${nickname}님은` : '당신은';
+}
 
 export const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

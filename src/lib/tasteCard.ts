@@ -1,5 +1,5 @@
 import 'server-only';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { UUID_RE, type TasteCard } from './tasteLabel';
 
 /**
@@ -15,10 +15,17 @@ const anon = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
 
-export async function fetchTasteCard(userId: string): Promise<TasteCard | null> {
+/**
+ * @param client 세션이 있는 클라이언트(본인 조회용). anon 으로 부르면 서버에
+ *   auth.uid() 가 없어서 공유 전 본인 카드가 "비공개"로 나온다.
+ */
+export async function fetchTasteCard(
+  userId: string,
+  client: SupabaseClient = anon,
+): Promise<TasteCard | null> {
   if (!UUID_RE.test(userId)) return null;
 
-  const { data, error } = await anon
+  const { data, error } = await client
     .rpc('get_taste_card', { p_user: userId })
     .single();
 
@@ -32,6 +39,8 @@ export async function fetchTasteCard(userId: string): Promise<TasteCard | null> 
     tags: string[] | null;
     game_name: string | null;
     game_image: string | null;
+    visible: boolean | null;
+    nickname: string | null;
   };
 
   return {
@@ -39,5 +48,7 @@ export async function fetchTasteCard(userId: string): Promise<TasteCard | null> 
     tags: row.tags ?? [],
     gameName: row.game_name,
     gameImage: row.game_image,
+    visible: row.visible ?? false,
+    nickname: row.nickname,
   };
 }
