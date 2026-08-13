@@ -42,6 +42,7 @@ export async function fetchTasteCard(
     game_image: string | null;
     visible: boolean | null;
     nickname: string | null;
+    shared: boolean | null;
   };
 
   return {
@@ -51,6 +52,7 @@ export async function fetchTasteCard(
     gameImage: row.game_image,
     visible: row.visible ?? false,
     nickname: row.nickname,
+    shared: row.shared ?? false,
   };
 }
 

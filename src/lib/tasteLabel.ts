@@ -7,6 +7,8 @@ export type TasteCard = {
   visible: boolean;
   /** 카드 주인 닉네임. 공유 링크로 보는 사람에겐 "당신은"이 틀린 말이라 필요하다. */
   nickname: string | null;
+  /** 실제 공개 여부. visible 은 본인이면 항상 true 라 공개 상태를 알 수 없다. */
+  shared: boolean;
 };
 
 export const UUID_RE =

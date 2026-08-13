@@ -119,7 +119,9 @@ export function TasteCardView({
           </>
         )}
 
-        {isOwner && <ShareActions title={title} userId={userId} />}
+        {isOwner && (
+          <ShareActions title={title} userId={userId} shared={card.shared} />
+        )}
       </div>
     </div>
   );

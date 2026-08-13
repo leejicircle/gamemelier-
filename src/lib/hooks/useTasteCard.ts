@@ -27,6 +27,7 @@ export function useTasteCard(userId?: string, enabled = true) {
         game_image: string | null;
         visible: boolean | null;
         nickname: string | null;
+        shared: boolean | null;
       };
 
       return {
@@ -36,6 +37,7 @@ export function useTasteCard(userId?: string, enabled = true) {
         gameImage: row.game_image,
         visible: row.visible ?? false,
         nickname: row.nickname,
+        shared: row.shared ?? false,
       };
     },
     staleTime: 60_000,
