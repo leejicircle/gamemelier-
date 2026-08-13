@@ -83,9 +83,16 @@ export default async function Image(props: {
               정보가 없으므로 누구 카드인지 이미지 안에 있어야 한다. 제목 줄을 늘리는
               대신 헤더 문구에 넣어 76px 타이틀이 계속 주인공이게 둔다. */}
           <div style={{ display: 'flex', color: '#a1a1aa', fontSize: 26 }}>
-            {card?.nickname
-              ? `${card.nickname}님의 취향 리포트`
-              : '겜믈리에 취향 리포트'}
+            {card?.nickname ? (
+              <>
+                {/* 카드와 같은 강조. 다만 굵기는 안 준다 — 이 이미지엔 Medium 한 벌만
+                    싣고 있어서 bold 를 요청해도 같은 자소가 나온다(파일만 1.5MB 늘 뿐). */}
+                <span style={{ color: '#a78bfa' }}>{card.nickname}</span>
+                <span>님의 취향 리포트</span>
+              </>
+            ) : (
+              '겜믈리에 취향 리포트'
+            )}
           </div>
 
           <div
