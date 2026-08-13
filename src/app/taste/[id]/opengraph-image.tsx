@@ -79,8 +79,13 @@ export default async function Image(props: {
             padding: '72px',
           }}
         >
+          {/* 다운로드한 이미지는 링크와 떨어져 돌아다닌다(스토리·리포스트) — 보낸 사람
+              정보가 없으므로 누구 카드인지 이미지 안에 있어야 한다. 제목 줄을 늘리는
+              대신 헤더 문구에 넣어 76px 타이틀이 계속 주인공이게 둔다. */}
           <div style={{ display: 'flex', color: '#a1a1aa', fontSize: 26 }}>
-            겜믈리에 취향 리포트
+            {card?.nickname
+              ? `${card.nickname}님의 취향 리포트`
+              : '겜믈리에 취향 리포트'}
           </div>
 
           <div
