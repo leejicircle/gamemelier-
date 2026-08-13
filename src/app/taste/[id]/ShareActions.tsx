@@ -52,11 +52,13 @@ export default function ShareActions({
         <Share2 size={16} />
         공유하기
       </button>
+      {/* download 는 동일 오리진에서만 동작하는데 OG 이미지가 같은 오리진이라 그대로 저장된다
+          (캔버스 라이브러리 불필요). iOS Safari 는 download 를 무시하고 이미지를 열 수 있는데,
+          그 경우 길게 눌러 저장하는 예전 동작으로 떨어질 뿐이라 더 나빠지지 않는다. */}
       <a
         href={`/taste/${userId}/opengraph-image`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="rounded-lg border border-gray-700 px-4 py-2.5 text-sm text-gray-300 transition-colors hover:bg-gray-800"
+        download="gamemelier-taste-card.png"
+        className="flex cursor-pointer items-center rounded-lg border border-gray-700 px-4 py-2.5 text-sm text-gray-300 transition-colors hover:bg-gray-800"
       >
         이미지 저장
       </a>
