@@ -15,7 +15,8 @@ export default function ShareActions({
   userId: string;
 }) {
   async function share() {
-    const url = window.location.href;
+    // location.href 를 쓰면 팝업으로 열었을 때 /recommend 가 공유된다 — 카드 URL 을 직접 만든다.
+    const url = `${window.location.origin}/taste/${userId}`;
     const text = `내 스팀 취향은 "${title}". 당신은 어떤 유형?`;
 
     if (navigator.share) {
