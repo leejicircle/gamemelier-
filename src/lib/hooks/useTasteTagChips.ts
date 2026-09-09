@@ -16,7 +16,9 @@ export function useTasteTagChips(userId?: string, limit = 4) {
     queryFn: async (): Promise<TasteTagChip[]> => {
       const { data, error } = await supabase
         .from('user_tag_preferences')
-        .select('tag_id, weight, tags(name)')
+        // tags!inner + eq 로 취향 축이 아닌 태그(Indie·Free to Play 등)를 걸러낸다.
+        .select('tag_id, weight, tags!inner(name)')
+        .eq('tags.is_taste_axis', true)
         .gt('weight', 0);
       if (error) {
         console.error('taste tag chips 실패:', error.message);
